@@ -21,6 +21,7 @@ model Company {
   channels       Channel[]
   integrations   Integration[]
   tags           Tag[]
+  pipelineStages PipelineStage[]
   Task           Task[]
   AutomationRule AutomationRule[]
 
@@ -241,4 +242,20 @@ model MessageTemplate {
   companyId String
   company   Company  @relation(fields: [companyId], references: [id])
   createdAt DateTime @default(now())
+}
+
+model PipelineStage {
+  id        String   @id @default(uuid())
+  name      String
+  color     String   @default("blue")
+  order     Int      @default(0)
+  
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@map("pipeline_stages")
 }

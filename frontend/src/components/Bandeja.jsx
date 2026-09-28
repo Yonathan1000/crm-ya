@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 
 export default function Bandeja() {
   const [conversations, setConversations] = useState([]);
+  const [pipelineStages, setPipelineStages] = useState([]);
   const [activeConv, setActiveConv] = useState(null);
   const [message, setMessage] = useState('');
   
@@ -58,6 +59,16 @@ export default function Bandeja() {
   const fetchConversations = async () => {
     try {
       const token = localStorage.getItem('token');
+      
+      try {
+        const stagesRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/pipeline-stages`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (stagesRes.ok) {
+          setPipelineStages(await stagesRes.json());
+        }
+      } catch(e) {}
+
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/conversations`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -463,11 +474,7 @@ export default function Bandeja() {
                   onChange={handleLeadChange}
                   className="w-full py-2 px-3 bg-yellow-50 text-yellow-800 font-semibold text-sm rounded-lg border border-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 capitalize"
                 >
-                  <option value="lead_nuevo">Nuevo Prospecto</option>
-                  <option value="en_contacto">Contactado</option>
-                  <option value="propuesta">Propuesta</option>
-                  <option value="ganado">Ganado</option>
-                  <option value="perdido">Perdido</option>
+                  {pipelineStages.map(stage => (<option key={stage.id} value={stage.id}>{stage.name}</option>))}
                 </select>
               </div>
 

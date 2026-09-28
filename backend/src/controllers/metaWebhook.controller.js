@@ -72,8 +72,7 @@ export const handleIncomingMessage = async (req, res) => {
                   data: {
                     nombre: realName,
                     externalId: senderExternalId,
-                    estado_lead: 'lead_nuevo',
-                    companyId: channel.companyId
+                    estado_lead: (await prisma.pipelineStage.findFirst({ where: { companyId: channel.companyId }, orderBy: { order: 'asc' } }))?.id || 'lead_nuevo',
                   }
                 });
               }
@@ -134,8 +133,7 @@ export const handleIncomingMessage = async (req, res) => {
                        nombre: change.value.contacts?.[0]?.profile?.name || `Lead WA (${senderExternalId.substring(0, 5)})`,
                        telefono: senderExternalId,
                        externalId: senderExternalId,
-                       estado_lead: 'lead_nuevo',
-                       companyId: channel.companyId
+                       estado_lead: (await prisma.pipelineStage.findFirst({ where: { companyId: channel.companyId }, orderBy: { order: 'asc' } }))?.id || 'lead_nuevo',
                      }
                    });
                  }

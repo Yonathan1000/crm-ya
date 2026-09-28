@@ -56,53 +56,16 @@ const PlusIcon = () => (
  * Definición de las etapas del pipeline con sus colores de acento.
  * @type {Array<{id: string, title: string, borderColor: string, textColor: string, bgAccent: string}>}
  */
-const STAGES = [
-  {
-    id: 'lead_nuevo',
-    title: 'Lead Nuevo',
-    borderColor: 'border-t-[#DBEAFE]',
-    textColor: 'text-[#3B82F6]',
-    bgAccent: 'bg-[#DBEAFE]',
-    badgeBg: 'bg-blue-100',
-    badgeText: 'text-blue-700',
-  },
-  {
-    id: 'en_contacto',
-    title: 'En Contacto',
-    borderColor: 'border-t-[#FEF3C7]',
-    textColor: 'text-[#F59E0B]',
-    bgAccent: 'bg-[#FEF3C7]',
-    badgeBg: 'bg-amber-100',
-    badgeText: 'text-amber-700',
-  },
-  {
-    id: 'propuesta',
-    title: 'Propuesta',
-    borderColor: 'border-t-[#FFEDD5]',
-    textColor: 'text-[#F97316]',
-    bgAccent: 'bg-[#FFEDD5]',
-    badgeBg: 'bg-orange-100',
-    badgeText: 'text-orange-700',
-  },
-  {
-    id: 'ganado',
-    title: 'Ganado',
-    borderColor: 'border-t-[#DCFCE7]',
-    textColor: 'text-[#22C55E]',
-    bgAccent: 'bg-[#DCFCE7]',
-    badgeBg: 'bg-green-100',
-    badgeText: 'text-green-700',
-  },
-  {
-    id: 'perdido',
-    title: 'Perdido',
-    borderColor: 'border-t-[#FEE2E2]',
-    textColor: 'text-[#EF4444]',
-    bgAccent: 'bg-[#FEE2E2]',
-    badgeBg: 'bg-red-100',
-    badgeText: 'text-red-700',
-  }
-];
+const getColorConfig = (colorName) => {
+  const configs = {
+    blue: { borderColor: 'border-t-[#DBEAFE]', textColor: 'text-[#3B82F6]', bgAccent: 'bg-[#DBEAFE]', badgeBg: 'bg-blue-100', badgeText: 'text-blue-700' },
+    yellow: { borderColor: 'border-t-[#FEF3C7]', textColor: 'text-[#F59E0B]', bgAccent: 'bg-[#FEF3C7]', badgeBg: 'bg-amber-100', badgeText: 'text-amber-700' },
+    orange: { borderColor: 'border-t-[#FFEDD5]', textColor: 'text-[#F97316]', bgAccent: 'bg-[#FFEDD5]', badgeBg: 'bg-orange-100', badgeText: 'text-orange-700' },
+    green: { borderColor: 'border-t-[#DCFCE7]', textColor: 'text-[#22C55E]', bgAccent: 'bg-[#DCFCE7]', badgeBg: 'bg-green-100', badgeText: 'text-green-700' },
+    red: { borderColor: 'border-t-[#FEE2E2]', textColor: 'text-[#EF4444]', bgAccent: 'bg-[#FEE2E2]', badgeBg: 'bg-red-100', badgeText: 'text-red-700' },
+  };
+  return configs[colorName] || configs.blue;
+};
 
 /* ──────────────────────────── Helpers ─────────────────────────────────────── */
 
@@ -367,6 +330,7 @@ function PipelineColumn({ stage, leads, onMoveLead, onCardClick, onNewLead }) {
  * @returns {JSX.Element} Tablero Kanban completo.
  */
 export function PipelineBoard() {
+  const [stages, setstages] = useState([]);
   const [leads, setLeads] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredLeads, setFilteredLeads] = useState([]);
@@ -376,18 +340,33 @@ export function PipelineBoard() {
 
   const fetchLeads = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/clients`);
+      const token = localStorage.getItem('token');
+      const headers = { 'Authorization': `Bearer ${token}` };
+
+      // 1. Fetch stages
+      const stagesRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/pipeline-stages`, { headers });
+      let loadedstages = [];
+      if (stagesRes.ok) {
+        const dbstages = await stagesRes.json();
+        loadedstages = dbstages.map(s => ({
+          id: s.id,
+          title: s.name,
+          ...getColorConfig(s.color)
+        }));
+        setstages(loadedstages);
+      }
+
+      // 2. Fetch Leads
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/clients`, { headers });
       if (!response.ok) throw new Error('Falló la carga de leads');
       const data = await response.json();
       
       const formattedLeads = data.map(client => {
-        let matchedStageId = 'lead_nuevo';
+        let matchedStageId = loadedstages.length > 0 ? loadedstages[0].id : 'lead_nuevo';
         if (client.estado_lead) {
-           const normalized = client.estado_lead.toLowerCase().trim().replace(/ /g, '_');
-           const found = STAGES.find(s => 
-             s.id === normalized || 
-             s.title.toLowerCase() === client.estado_lead.toLowerCase().trim() || 
-             s.id === client.estado_lead
+           const found = loadedstages.find(s => 
+             s.id === client.estado_lead || 
+             s.title.toLowerCase() === client.estado_lead.toLowerCase().trim()
            );
            if (found) matchedStageId = found.id;
         }
@@ -440,7 +419,7 @@ export function PipelineBoard() {
     const lead = leads.find(l => String(l.id) === String(leadId));
     if (!lead) return;
 
-    const toStageData = STAGES.find(s => s.id === toStage);
+    const toStageData = stages.find(s => s.id === toStage);
 
     // 1. Actualización Optimista (La UI se actualiza instantáneamente)
     setLeads(prev => prev.map(l => 
@@ -516,7 +495,7 @@ export function PipelineBoard() {
 
   const handleCardClick = (lead) => {
     setSelectedLead(lead);
-    const stage = STAGES.find(s => s.id === lead.stage);
+    const stage = stages.find(s => s.id === lead.stage);
     setSelectedStage(stage);
   };
 
@@ -607,7 +586,7 @@ export function PipelineBoard() {
           role="region"
           aria-label="Tablero de pipeline de ventas"
         >
-          {STAGES.map((stage) => (
+          {stages.map((stage) => (
             <div key={stage.id} className="snap-start">
               <PipelineColumn
                 stage={stage}
@@ -642,3 +621,4 @@ export function PipelineBoard() {
 }
 
 export default PipelineBoard;
+

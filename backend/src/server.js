@@ -10,6 +10,7 @@ import templatesRoutes from './routes/templates.routes.js';
 import superadminRoutes from './routes/superadmin.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import usersRoutes from './routes/users.routes.js';
+import pipelineStagesRoutes from './routes/pipelineStages.routes.js';
 import integrationsRoutes from './routes/integrations.routes.js';
 import webhookRoutes from './routes/metaWebhook.routes.js';
 
@@ -55,6 +56,7 @@ app.use('/api/templates', templatesRoutes);
 app.use('/api/superadmin', superadminRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/pipeline-stages', pipelineStagesRoutes);
 app.use('/api/integrations', integrationsRoutes);
 app.use('/api/webhooks', webhookRoutes);
 

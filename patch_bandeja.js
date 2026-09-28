@@ -1,29 +1,38 @@
 const fs = require('fs');
 let code = fs.readFileSync('d:/Documentos/YA/frontend/src/components/Bandeja.jsx', 'utf8');
 
-const newHandleSelect = \
-  const handleSelectConv = async (conv) => {
-    setActiveConv(conv);
-    if (conv.unreadCount > 0) {
-      setConversations(prev => prev.map(c => c.id === conv.id ? { ...c, unreadCount: 0 } : c));
+code = code.replace("const [conversations, setConversations] = useState([]);", "const [conversations, setConversations] = useState([]);\n  const [pipelineStages, setPipelineStages] = useState([]);");
+
+const fetchLogic = \
+  const fetchConversations = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Fetch stages
       try {
-        const token = localStorage.getItem('token');
-        await fetch(\\\\\\/api/conversations/\\\/read\\\, {
-          method: 'PATCH',
+        const stagesRes = await fetch(\\\\\\/api/pipeline-stages\\\, {
           headers: { 'Authorization': \\\Bearer \\\\\\ }
         });
-      } catch (err) {
-        console.error('Failed to mark as read', err);
-      }
-    }
-  };
-\;
+        if (stagesRes.ok) {
+          setPipelineStages(await stagesRes.json());
+        }
+      } catch(e) {}
 
-code = code.replace("onClick={() => setActiveConv(conv)}", "onClick={() => handleSelectConv(conv)}");
-code = code.replace("const handleSendMessage = async (e) => {", newHandleSelect + "\\n  const handleSendMessage = async (e) => {");
+      const res = await fetch(\\\\\\/api/conversations\\\, {\;
 
-const oldClassName = "className={p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition }";
-const newClassName = "className={p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition }";
+code = code.replace(/const fetchConversations = async \(\) => \{\s*try \{\s*const token = localStorage\.getItem\('token'\);\s*const res = await fetch\(\$\{import\.meta\.env\.VITE_API_URL \|\| 'http:\/\/localhost:3001'\}\/api\/conversations, \{/m, fetchLogic);
 
-code = code.replace(oldClassName, newClassName);
+const selectHTML = \<select 
+                  name="estado_lead"
+                  value={editLeadData.estado_lead || ''}
+                  onChange={handleLeadChange}
+                  className="w-full py-2 px-3 bg-yellow-50 text-yellow-800 font-semibold text-sm rounded-lg border border-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 capitalize"
+                >
+                  {pipelineStages.map(stage => (
+                    <option key={stage.id} value={stage.id}>{stage.name}</option>
+                  ))}
+                </select>\;
+
+code = code.replace(/<select[\s\S]*?name="estado_lead"[\s\S]*?<\/select>/, selectHTML);
+
 fs.writeFileSync('d:/Documentos/YA/frontend/src/components/Bandeja.jsx', code);
