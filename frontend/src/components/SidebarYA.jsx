@@ -85,7 +85,7 @@ const SETTINGS_ITEM = {
   ),
 };
 
-export function SidebarYA({ defaultActive = 'inicio', onNavChange, hasPremiumAccess = true }) {
+export function SidebarYA({ defaultActive = 'inicio', onNavChange, hasPremiumAccess = true, unreadCount = 0 }) {
   const [activeId, setActiveId] = useState(defaultActive);
   const [expanded, setExpanded] = useState(false);
   
@@ -138,7 +138,7 @@ export function SidebarYA({ defaultActive = 'inicio', onNavChange, hasPremiumAcc
             }
           `}
         >
-          <span className="flex-shrink-0">{item.icon}</span>
+          <div className="relative flex-shrink-0">{item.icon}{item.id === "bandeja" && unreadCount > 0 && (<span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white animate-pulse">{unreadCount > 99 ? "99+" : unreadCount}</span>)}</div>
           <span
             className={`whitespace-nowrap transition-opacity duration-200 flex flex-1 items-center justify-between ${
               expanded ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'

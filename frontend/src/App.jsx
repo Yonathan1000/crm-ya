@@ -57,6 +57,34 @@ export default function App() {
   }, [currentView]);
 
   const unreadNotifications = 3;
+  const [unreadBandeja, setUnreadBandeja] = useState(0);
+
+  React.useEffect(() => {
+    if (currentView !== "app") return;
+    const fetchUnread = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const res = await fetch(${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/conversations, {
+          headers: { "Authorization": Bearer  }
+        });
+        if (res.ok) {
+          const convs = await res.json();
+          let count = 0;
+          convs.forEach(c => {
+            const lastMsg = c.messages && c.messages.length > 0 ? c.messages[c.messages.length - 1] : null;
+            if (lastMsg && lastMsg.direction === "INBOUND") {
+              count++;
+            }
+          });
+          setUnreadBandeja(count);
+        }
+      } catch(e) {}
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 5000);
+    return () => clearInterval(interval);
+  }, [currentView]);
 
   if (isCheckingSession) {
     return <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F5F7] text-gray-500 font-medium">Reconectando con la matriz...</div>;
@@ -96,7 +124,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F4F5F7] font-sans text-gray-800">
-      <SidebarYA onNavChange={(id) => setActiveTab(id)} defaultActive="inicio" hasPremiumAccess={hasPremiumAccess} />
+      <SidebarYA onNavChange={(id) => setActiveTab(id)} defaultActive="inicio" hasPremiumAccess={hasPremiumAccess} unreadCount={unreadBandeja} />
 
       <div className="flex-1 ml-[72px] flex flex-col h-screen overflow-hidden">
         <header className="shrink-0 z-30 flex items-center justify-between h-14 px-6 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
