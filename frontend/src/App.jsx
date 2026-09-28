@@ -65,8 +65,8 @@ export default function App() {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-        const res = await fetch(${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/conversations, {
-          headers: { "Authorization": Bearer  }
+        const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/conversations`, {
+          headers: { "Authorization": `Bearer ${token}` }
         });
         if (res.ok) {
           const convs = await res.json();
