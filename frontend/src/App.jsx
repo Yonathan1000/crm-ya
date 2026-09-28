@@ -72,10 +72,7 @@ export default function App() {
           const convs = await res.json();
           let count = 0;
           convs.forEach(c => {
-            const lastMsg = c.messages && c.messages.length > 0 ? c.messages[c.messages.length - 1] : null;
-            if (lastMsg && lastMsg.direction === "INBOUND") {
-              count++;
-            }
+            count += c.unreadCount || 0;
           });
           setUnreadBandeja(count);
         }
@@ -252,3 +249,4 @@ export default function App() {
   );
 }
 // Trigger Vercel Deploy
+

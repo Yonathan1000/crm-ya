@@ -150,7 +150,8 @@ export const handleIncomingMessage = async (req, res) => {
                    });
                  }
 
-                 const savedMessage = await prisma.message.create({
+                 await prisma.conversation.update({ where: { id: conversation.id }, data: { unreadCount: { increment: 1 } } });
+                const savedMessage = await prisma.message.create({
                    data: {
                      content: text,
                      direction: 'INBOUND',

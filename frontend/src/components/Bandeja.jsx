@@ -144,6 +144,26 @@ export default function Bandeja() {
     };
   }, []);
 
+    const handleSelectConv = async (conv) => {
+    setActiveConv(conv);
+    if (conv.unreadCount > 0) {
+      // Optimistic update locally
+      setConversations(prev => prev.map(c => c.id === conv.id ? { ...c, unreadCount: 0 } : c));
+      
+      try {
+        const token = localStorage.getItem('token');
+        await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/conversations/${conv.id}/read`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch (err) {
+        console.error('Failed to mark as read', err);
+      }
+    }
+  };
+
+
+
   const handleSendMessage = async (e) => {
     e?.preventDefault();
     if (!message.trim() || !activeConv) return;
@@ -292,8 +312,8 @@ export default function Bandeja() {
             return (
               <div 
                 key={conv.id} 
-                onClick={() => setActiveConv(conv)}
-                className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition ${activeConv?.id === conv.id ? 'bg-indigo-50 border-l-4 border-l-indigo-500' : ''}`}
+                onClick={() => handleSelectConv(conv)}
+                className={`p-4 border-b border-gray-100 cursor-pointer transition ${activeConv?.id === conv.id ? 'bg-indigo-50 border-l-4 border-l-indigo-500' : (conv.unreadCount > 0 ? 'bg-blue-50 border-l-4 border-l-blue-400 hover:bg-blue-100' : 'bg-white hover:bg-gray-50')}`}
               >
                 <div className="flex justify-between items-start mb-1">
                   <span className="font-semibold text-sm truncate">{clientName}</span>
@@ -498,3 +518,5 @@ export default function Bandeja() {
     </div>
   );
 }
+
+
