@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PipelineStagesManager from './PipelineStagesManager';
 
 export default function Configuracion() {
   const [activeTab, setActiveTab] = useState('perfil');
@@ -383,7 +384,9 @@ export default function Configuracion() {
             </div>
           </div>
         );
-      case 'canales':
+      case 'embudos':
+          return <PipelineStagesManager />;
+        case 'canales':
         return (
           <div>
             <h3 className="text-xl font-semibold text-gray-900 mb-6">Canales de Comunicación (Omnicanal)</h3>
@@ -505,7 +508,13 @@ export default function Configuracion() {
               Facturación
             </button>
             <button
-              onClick={() => setActiveTab('canales')}
+              onClick={() => setActiveTab('embudos')}
+                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors `}
+              >
+                Embudos de Venta
+              </button>
+              <button
+                onClick={() => setActiveTab('canales')}
               className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                 activeTab === 'canales'
                   ? 'bg-blue-50 text-blue-700'
@@ -583,3 +592,4 @@ export default function Configuracion() {
     </div>
   );
 }
+
