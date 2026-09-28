@@ -1,0 +1,243 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  plan      String   @default("FREE")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  users          User[]
+  clients        Client[]
+  interactions   Interaction[]
+  channels       Channel[]
+  integrations   Integration[]
+  tags           Tag[]
+  Task           Task[]
+  AutomationRule AutomationRule[]
+
+  @@map("companies")
+  templates       MessageTemplate[]
+  planType        String   @default("TRIAL")
+  billingCycle    Int      @default(1)
+  maxUsers        Int      @default(2)
+  maxTemplates    Int      @default(10)
+  premiumUnlocked Boolean  @default(false)
+  trialEndsAt     DateTime?
+}
+
+model User {
+  id             String   @id @default(uuid())
+  nombre         String
+  email          String   @unique
+  password_hash  String
+  role           String   @default("SALES_REP") // SUPER_ADMIN, COMPANY_ADMIN, SALES_REP
+  isApproved     Boolean  @default(false)
+  fecha_creacion DateTime @default(now())
+
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  clients      Client[]
+  interactions Interaction[]
+  messages     Message[]
+  Task         Task[]
+
+  @@index([companyId])
+  @@map("users")
+  isSuperAdmin    Boolean  @default(false)
+}
+
+model Client {
+  id          String  @id @default(uuid())
+  nombre      String
+  empresa     String?
+  email       String?
+  externalId  String? @unique
+  telefono    String?
+  estado_lead String  @default("Nuevo")
+
+  asignado_a_userId String?
+  asignado_a        User?   @relation(fields: [asignado_a_userId], references: [id], onDelete: SetNull)
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  fecha_creacion DateTime @default(now())
+
+  interactions  Interaction[]
+  conversations Conversation[]
+  tags          Tag[]
+  Task          Task[]
+
+  @@index([companyId])
+  @@index([asignado_a_userId])
+  @@map("clients")
+}
+
+model Interaction {
+  id    String   @id @default(uuid())
+  tipo  String
+  notas String?
+  fecha DateTime @default(now())
+
+  client_id String
+  client    Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([client_id])
+  @@index([user_id])
+  @@index([companyId])
+  @@map("interactions")
+}
+
+model Tag {
+  id    String  @id @default(uuid())
+  name  String
+  color String?
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  clients Client[]
+
+  @@index([companyId])
+  @@map("tags")
+}
+
+model Integration {
+  id           String   @id @default(uuid())
+  provider     String   // ej. META
+  accessToken  String?  @db.Text
+  refreshToken String?  @db.Text
+  externalId   String?  // Meta Business ID o Facebook User ID
+  status       String   @default("ACTIVE")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  channels     Channel[]
+
+  @@index([companyId])
+  @@map("integrations")
+}
+
+model Channel {
+  id            String @id @default(uuid())
+  platform      String // WHATSAPP, FACEBOOK, INSTAGRAM
+  externalId    String? // Page ID, IG Account ID o Phone Number ID
+  name          String? // Nombre de la página o perfil
+  credentials   String? // JSON string (fallback si se necesita info extra)
+  status        String @default("ACTIVE")
+
+  companyId     String
+  company       Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  integrationId String?
+  integration   Integration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
+
+  conversations Conversation[]
+
+  @@index([companyId])
+  @@index([integrationId])
+  @@map("channels")
+}
+
+model Conversation {
+  id     String @id @default(uuid())
+  status String @default("OPEN") // OPEN, CLOSED
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  channelId String
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  @@index([clientId])
+  @@index([channelId])
+  @@map("conversations")
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String
+  direction String // INBOUND, OUTBOUND
+  timestamp DateTime @default(now())
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  senderId String?
+  sender   User?   @relation(fields: [senderId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@map("messages")
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  priority    String    @default("Media") // Alta, Media, Baja
+  status      String    @default("Pendiente") // Pendiente, Completada
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+
+  assignedToId String?
+  assignedTo   User?   @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([assignedToId])
+  @@index([companyId])
+  @@map("tasks")
+}
+
+model AutomationRule {
+  id               String   @id @default(uuid())
+  name             String
+  triggerType      String // COMMENT_REEL, LEAD_STAGE_CHANGE, etc.
+  triggerCondition String // JSON string for condition details
+  actionType       String // SEND_DM, SEND_WA_MESSAGE
+  actionPayload    String // JSON string for what to send
+  isActive         Boolean  @default(true)
+  executionCount   Int      @default(0)
+  createdAt        DateTime @default(now())
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("automation_rules")
+}
+
+model MessageTemplate {
+  id        String   @id @default(uuid())
+  name      String
+  content   String
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  createdAt DateTime @default(now())
+}
