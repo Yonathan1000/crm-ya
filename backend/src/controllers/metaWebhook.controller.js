@@ -50,6 +50,9 @@ export const handleIncomingMessage = async (req, res) => {
               const senderExternalId = event.sender.id;
               const text = event.message.text;
 
+              // Detectar si es Instagram o Facebook Messenger
+              const isInstagram = body.object === 'instagram';
+
               // a) Buscar si el cliente ya existe
               let client = await prisma.client.findUnique({
                 where: { externalId: senderExternalId }
@@ -57,21 +60,34 @@ export const handleIncomingMessage = async (req, res) => {
 
               if (!client) {
                 // b) Si no, crearlo como Lead "Nuevo"
-                let realName = `Lead de Facebook (${senderExternalId.substring(0, 5)})`;
+                let realName = isInstagram
+                  ? `Lead de Instagram (${senderExternalId.substring(0, 5)})`
+                  : `Lead de Facebook (${senderExternalId.substring(0, 5)})`;
+                
                 try {
                   const { default: axios } = await import('axios');
-                  const fbProfile = await axios.get(`https://graph.facebook.com/v18.0/${senderExternalId}?fields=first_name,last_name,profile_pic&access_token=${channel.credentials}`);
-                  if (fbProfile.data) {
-                    realName = `${fbProfile.data.first_name || ''} ${fbProfile.data.last_name || ''}`.trim() || realName;
+                  if (isInstagram) {
+                    // Intentar obtener el perfil de Instagram del remitente
+                    const igProfile = await axios.get(`https://graph.facebook.com/v18.0/${senderExternalId}?fields=username,name&access_token=${channel.credentials}`);
+                    if (igProfile.data) {
+                      realName = igProfile.data.name || igProfile.data.username || realName;
+                    }
+                  } else {
+                    // Obtener perfil público de Facebook
+                    const fbProfile = await axios.get(`https://graph.facebook.com/v18.0/${senderExternalId}?fields=first_name,last_name,profile_pic&access_token=${channel.credentials}`);
+                    if (fbProfile.data) {
+                      realName = `${fbProfile.data.first_name || ''} ${fbProfile.data.last_name || ''}`.trim() || realName;
+                    }
                   }
                 } catch (err) {
-                  console.warn('No se pudo obtener el perfil público de Facebook:', err?.response?.data || err.message);
+                  console.warn(`No se pudo obtener el perfil público de ${isInstagram ? 'Instagram' : 'Facebook'}:`, err?.response?.data || err.message);
                 }
 
                 client = await prisma.client.create({
                   data: {
                     nombre: realName,
                     externalId: senderExternalId,
+                    companyId: channel.companyId,
                     estado_lead: (await prisma.pipelineStage.findFirst({ where: { companyId: channel.companyId }, orderBy: { order: 'asc' } }))?.id || 'lead_nuevo',
                   }
                 });
@@ -92,10 +108,13 @@ export const handleIncomingMessage = async (req, res) => {
                 });
               }
 
+              // Incrementar contador de no leídos
+              await prisma.conversation.update({ where: { id: conversation.id }, data: { unreadCount: { increment: 1 } } });
+
               // d) Guardar el mensaje en Prisma
               const savedMessage = await prisma.message.create({
                 data: {
-                  content: text,
+                  content: text || '[Contenido multimedia]',
                   direction: 'INBOUND',
                   conversationId: conversation.id
                 }
@@ -108,7 +127,7 @@ export const handleIncomingMessage = async (req, res) => {
                 client: client,
                 channel: channel
               });
-              console.log(`Mensaje guardado y emitido por WebSocket en conversacion ${conversation.id}`);
+              console.log(`Mensaje de ${isInstagram ? 'Instagram' : 'Facebook'} guardado y emitido por WebSocket en conversacion ${conversation.id}`);
             }
           }
         }

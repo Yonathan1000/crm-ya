@@ -105,6 +105,28 @@ router.post('/:id/messages', async (req, res) => {
         console.error('Error enviando mensaje a WhatsApp:', waError?.response?.data || waError.message);
         return res.status(500).json({ error: 'No se pudo enviar el mensaje a WhatsApp' });
       }
+    } else if (conversation.channel.platform === 'INSTAGRAM') {
+      // Instagram DMs se envían a través de la Graph API usando el token de la página vinculada
+      const pageAccessToken = conversation.channel.credentials;
+      const recipientIgId = conversation.client.externalId;
+
+      try {
+        const { default: axios } = await import('axios');
+        await axios.post(
+          `https://graph.facebook.com/v18.0/me/messages`,
+          {
+            recipient: { id: recipientIgId },
+            message: { text: content }
+          },
+          {
+            params: { access_token: pageAccessToken }
+          }
+        );
+        console.log(`Mensaje enviado a Instagram DM (Destinatario: ${recipientIgId})`);
+      } catch (igError) {
+        console.error('Error enviando mensaje a Instagram:', igError?.response?.data || igError.message);
+        return res.status(500).json({ error: 'No se pudo enviar el mensaje a Instagram' });
+      }
     }
 
     // --- GUARDAR EL MENSAJE EN LA BASE DE DATOS ---

@@ -26,7 +26,7 @@ export const getFacebookAuthUrl = (req, res) => {
     const companyId = req.user.companyId;
 
     const configId = process.env.META_CONFIG_ID;
-    const scope = 'pages_manage_metadata,pages_read_engagement,pages_messaging,whatsapp_business_messaging';
+    const scope = 'pages_manage_metadata,pages_read_engagement,pages_messaging,whatsapp_business_messaging,instagram_basic,instagram_manage_messages,pages_show_list';
     
     let authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&state=${companyId}&response_type=code&auth_type=rerequest`;
     
@@ -138,6 +138,57 @@ export const handleFacebookCallback = async (req, res) => {
           console.log(`Webhook suscrito para la página: ${page.name}`);
         } catch (subErr) {
           console.error(`Error suscribiendo webhook para ${page.name}:`, subErr?.response?.data || subErr.message);
+        }
+
+        // 4.7 Descubrir la cuenta de Instagram Business vinculada a esta página
+        try {
+          const igResponse = await axios.get(`https://graph.facebook.com/v18.0/${page.id}?fields=instagram_business_account&access_token=${page.access_token}`);
+          const igAccountId = igResponse.data?.instagram_business_account?.id;
+
+          if (igAccountId) {
+            // Obtener el nombre de usuario de Instagram
+            let igUsername = `Instagram (${igAccountId.substring(0, 5)})`;
+            try {
+              const igProfile = await axios.get(`https://graph.facebook.com/v18.0/${igAccountId}?fields=username,name&access_token=${page.access_token}`);
+              igUsername = igProfile.data?.username || igProfile.data?.name || igUsername;
+            } catch (igProfileErr) {
+              console.warn('No se pudo obtener perfil IG:', igProfileErr?.response?.data || igProfileErr.message);
+            }
+
+            await prisma.channel.upsert({
+              where: { id: 'channel_ig_' + igAccountId },
+              create: {
+                id: 'channel_ig_' + igAccountId,
+                platform: 'INSTAGRAM',
+                externalId: igAccountId,
+                name: `@${igUsername}`,
+                credentials: page.access_token, // Se usa el token de la página para enviar/recibir DMs de IG
+                companyId: companyId,
+                integrationId: integration.id,
+                status: 'ACTIVE'
+              },
+              update: {
+                name: `@${igUsername}`,
+                credentials: page.access_token,
+                status: 'ACTIVE'
+              }
+            });
+            console.log(`Canal de Instagram creado: @${igUsername} (ID: ${igAccountId})`);
+
+            // Suscribir también los campos de Instagram para recibir DMs
+            try {
+              await axios.post(`https://graph.facebook.com/v18.0/${page.id}/subscribed_apps`, null, {
+                params: {
+                  subscribed_fields: 'messages,messaging_postbacks',
+                  access_token: page.access_token
+                }
+              });
+            } catch (igSubErr) {
+              console.warn('Error suscribiendo IG webhook:', igSubErr?.response?.data || igSubErr.message);
+            }
+          }
+        } catch (igErr) {
+          console.warn(`No se encontró cuenta IG para la página ${page.name}:`, igErr?.response?.data || igErr.message);
         }
       }
     } catch (pageError) {
