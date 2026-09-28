@@ -169,14 +169,28 @@ export default function Bandeja() {
 
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/conversations/${activeConv.id}/messages`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/conversations/${activeConv.id}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ content: contentToSend, direction: 'OUTBOUND' })
       });
+      
+      if (!res.ok) {
+        throw new Error('Error de Meta');
+      }
+      
+      // Si todo sale bien, lo dejamos como estaba y recargamos para tener el ID real de la base de datos
       fetchConversations();
     } catch (err) {
       console.error("Error sending message:", err);
+      // Marcar el mensaje como FAILED en el UI
+      const failedMessage = { ...optimisticMessage, status: 'FAILED' };
+      const failedActive = {
+        ...activeConv,
+        messages: activeConv.messages ? activeConv.messages.map(m => m.id === optimisticMessage.id ? failedMessage : m) : [failedMessage]
+      };
+      setActiveConv(failedActive);
+      setConversations(prev => prev.map(c => c.id === activeConv.id ? failedActive : c));
     }
   };
 
@@ -240,6 +254,14 @@ export default function Bandeja() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [activeConv?.messages]);
 
+  const sortedConversations = [...conversations].sort((a, b) => {
+    const lastMsgA = a.messages && a.messages.length > 0 ? a.messages[a.messages.length - 1] : null;
+    const lastMsgB = b.messages && b.messages.length > 0 ? b.messages[b.messages.length - 1] : null;
+    const timeA = lastMsgA ? new Date(lastMsgA.timestamp || lastMsgA.created_at).getTime() : new Date(a.created_at || 0).getTime();
+    const timeB = lastMsgB ? new Date(lastMsgB.timestamp || lastMsgB.created_at).getTime() : new Date(b.created_at || 0).getTime();
+    return timeB - timeA;
+  });
+
   return (
     <div className="flex h-full w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden text-gray-800">
       
@@ -260,7 +282,7 @@ export default function Bandeja() {
         </div>
         
         <div className="flex-1 overflow-y-auto">
-          {conversations.map((conv) => {
+          {sortedConversations.map((conv) => {
             const clientName = conv.client?.nombre || 'Cliente Desconocido';
             const platform = conv.channel?.platform || 'Desconocido';
             const lastMessage = conv.messages && conv.messages.length > 0 
@@ -316,12 +338,12 @@ export default function Bandeja() {
                   <div key={msg.id} className={`flex ${isOutbound ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[70%] rounded-2xl px-4 py-2 ${
                       isOutbound 
-                        ? 'bg-indigo-600 text-white rounded-br-none' 
+                        ? (msg.status === 'FAILED' ? 'bg-red-500 text-white rounded-br-none' : 'bg-indigo-600 text-white rounded-br-none') 
                         : 'bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-100'
                     }`}>
                       <p className="text-sm">{msg.content}</p>
-                      <p className={`text-[10px] mt-1 text-right ${isOutbound ? 'text-indigo-100' : 'text-gray-400'}`}>
-                        {formatTime(msg.timestamp || msg.created_at)}
+                      <p className={`text-[10px] mt-1 text-right ${isOutbound ? (msg.status === 'FAILED' ? 'text-red-100' : 'text-indigo-100') : 'text-gray-400'}`}>
+                        {msg.status === 'FAILED' ? '?? Error al enviar (Meta)' : formatTime(msg.timestamp || msg.created_at)}
                       </p>
                     </div>
                   </div>
