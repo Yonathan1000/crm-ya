@@ -37,7 +37,7 @@ export const create = async (req, res) => {
         empresa,
         email,
         telefono,
-        estado_lead: estado_lead || 'Nuevo',
+        estado_lead: estado_lead || 'lead_nuevo',
         asignado_a_userId: req.user.id,
         companyId: req.user.companyId
       }

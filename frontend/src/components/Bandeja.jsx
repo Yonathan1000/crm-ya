@@ -463,11 +463,11 @@ export default function Bandeja() {
                   onChange={handleLeadChange}
                   className="w-full py-2 px-3 bg-yellow-50 text-yellow-800 font-semibold text-sm rounded-lg border border-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 capitalize"
                 >
-                  <option value="Nuevo">Nuevo Prospecto</option>
-                  <option value="Contactado">Contactado</option>
-                  <option value="Negociación">Negociación</option>
-                  <option value="Ganado">Ganado</option>
-                  <option value="Perdido">Perdido</option>
+                  <option value="lead_nuevo">Nuevo Prospecto</option>
+                  <option value="en_contacto">Contactado</option>
+                  <option value="propuesta">Propuesta</option>
+                  <option value="ganado">Ganado</option>
+                  <option value="perdido">Perdido</option>
                 </select>
               </div>
 

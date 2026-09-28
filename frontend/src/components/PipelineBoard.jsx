@@ -93,6 +93,15 @@ const STAGES = [
     badgeBg: 'bg-green-100',
     badgeText: 'text-green-700',
   },
+  {
+    id: 'perdido',
+    title: 'Perdido',
+    borderColor: 'border-t-[#FEE2E2]',
+    textColor: 'text-[#EF4444]',
+    bgAccent: 'bg-[#FEE2E2]',
+    badgeBg: 'bg-red-100',
+    badgeText: 'text-red-700',
+  }
 ];
 
 /* ──────────────────────────── Helpers ─────────────────────────────────────── */

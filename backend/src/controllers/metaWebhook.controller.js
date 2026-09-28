@@ -72,7 +72,7 @@ export const handleIncomingMessage = async (req, res) => {
                   data: {
                     nombre: realName,
                     externalId: senderExternalId,
-                    estado_lead: 'Nuevo',
+                    estado_lead: 'lead_nuevo',
                     companyId: channel.companyId
                   }
                 });
@@ -134,7 +134,7 @@ export const handleIncomingMessage = async (req, res) => {
                        nombre: change.value.contacts?.[0]?.profile?.name || `Lead WA (${senderExternalId.substring(0, 5)})`,
                        telefono: senderExternalId,
                        externalId: senderExternalId,
-                       estado_lead: 'Nuevo',
+                       estado_lead: 'lead_nuevo',
                        companyId: channel.companyId
                      }
                    });

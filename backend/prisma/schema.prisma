@@ -63,7 +63,7 @@ model Client {
   email       String?
   externalId  String? @unique
   telefono    String?
-  estado_lead String  @default("Nuevo")
+  estado_lead String  @default("lead_nuevo")
 
   asignado_a_userId String?
   asignado_a        User?   @relation(fields: [asignado_a_userId], references: [id], onDelete: SetNull)
