@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
+import toast from 'react-hot-toast';
+import { MessageSquareDashed, Loader2, SearchX } from 'lucide-react';
 
 export default function Bandeja() {
   const [conversations, setConversations] = useState([]);
@@ -10,6 +12,7 @@ export default function Bandeja() {
   const [templates, setTemplates] = useState([]);
   const [showTemplatePopover, setShowTemplatePopover] = useState(false);
   const [templateSearch, setTemplateSearch] = useState('');
+  const [isLoadingChats, setIsLoadingChats] = useState(true);
 
   // --- LEAD EDITING STATE ---
   const [editLeadData, setEditLeadData] = useState({});
@@ -49,8 +52,10 @@ export default function Bandeja() {
       
       setActiveConv(prev => ({ ...prev, client: updatedClient }));
       setConversations(prev => prev.map(c => c.id === activeConv.id ? { ...c, client: updatedClient } : c));
+      toast.success('Perfil actualizado correctamente');
     } catch(e) {
       console.error('Error al guardar lead:', e);
+      toast.error('Error al guardar los cambios');
     } finally {
       setIsSavingLead(false);
     }
@@ -83,6 +88,8 @@ export default function Bandeja() {
       }
     } catch (err) {
       console.error('Error fetching conversations:', err);
+    } finally {
+      setIsLoadingChats(false);
     }
   };
 
@@ -313,7 +320,20 @@ export default function Bandeja() {
         </div>
         
         <div className="flex-1 overflow-y-auto">
-          {sortedConversations.map((conv) => {
+          {isLoadingChats && (
+            <div className="p-4 space-y-4">
+              {[1,2,3,4,5].map(i => (
+                <div key={i} className="animate-pulse flex gap-3">
+                  <div className="w-10 h-10 bg-gray-200 rounded-full shrink-0"></div>
+                  <div className="flex-1 space-y-2 py-1">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {!isLoadingChats && sortedConversations.map((conv) => {
             const clientName = conv.client?.nombre || 'Cliente Desconocido';
             const platform = conv.channel?.platform || 'Desconocido';
             const lastMessage = conv.messages && conv.messages.length > 0 
@@ -340,17 +360,24 @@ export default function Bandeja() {
               </div>
             );
           })}
-          {conversations.length === 0 && (
-            <div className="p-4 text-center text-sm text-gray-500">
-              No hay conversaciones disponibles.
+          {!isLoadingChats && conversations.length === 0 && (
+            <div className="p-8 text-center flex flex-col items-center justify-center h-full">
+              <SearchX className="w-10 h-10 text-gray-300 mb-3" />
+              <p className="text-sm font-medium text-gray-600">Aún no hay chats</p>
+              <p className="text-xs text-gray-400 mt-1">Tus nuevos mensajes de redes sociales aparecerán aquí.</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Columna Central: Ventana de Chat */}
-      <div className="w-2/4 flex flex-col bg-[#F4F5F7] border-r border-gray-200">
-        {activeConv ? (
+      <div className="w-2/4 flex flex-col bg-[#F4F5F7] border-r border-gray-200 relative">
+        {isLoadingChats ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3">
+            <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+            <p className="text-sm font-medium">Cargando conversaciones...</p>
+          </div>
+        ) : activeConv ? (
           <>
             <div className="shrink-0 p-4 bg-white border-b border-gray-200 flex items-center shadow-sm z-10">
               <div className="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold mr-3">
@@ -420,8 +447,12 @@ export default function Bandeja() {
             </form>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
-            Selecciona una conversación para empezar a chatear.
+          <div className="flex-1 flex flex-col items-center justify-center text-gray-400 bg-white">
+            <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+              <MessageSquareDashed className="w-12 h-12 text-gray-300" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-700 mb-1">Tu Bandeja de Entrada</h3>
+            <p className="text-sm text-gray-500 max-w-xs text-center">Selecciona un chat en el menú de la izquierda para empezar a conversar o responder.</p>
           </div>
         )}
       </div>

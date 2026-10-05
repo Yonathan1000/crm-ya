@@ -18,6 +18,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
+import { Loader2, KanbanSquare } from 'lucide-react';
 import LeadDetailModal from './LeadDetailModal';
 
 /* ──────────────────────────── Iconos SVG inline ──────────────────────────── */
@@ -336,7 +338,7 @@ export function PipelineBoard() {
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [selectedLead, setSelectedLead] = useState(null);
   const [selectedStage, setSelectedStage] = useState(null);
-  const [toast, setToast] = useState({ show: false, message: '' });
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchLeads = async () => {
     try {
@@ -388,8 +390,7 @@ export function PipelineBoard() {
       setLeads(formattedLeads);
     } catch (err) {
       console.error('Error al cargar leads:', err);
-      setToast({ show: true, message: '❌ Error al cargar leads' });
-      setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+      toast.error('Error al cargar leads');
     }
   };
 
@@ -426,10 +427,7 @@ export function PipelineBoard() {
       String(l.id) === String(leadId) ? { ...l, stage: toStage } : l
     ));
 
-    setToast({ show: true, message: `${lead.name} movido a ${toStageData.title}` });
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, show: false }));
-    }, 3000);
+    toast.success(`${lead.name} movido a ${toStageData.title}`);
 
     // 2. Sincronización Real con el Backend
     try {
@@ -453,8 +451,7 @@ export function PipelineBoard() {
       setLeads(prev => prev.map(l => 
         String(l.id) === String(leadId) ? { ...l, stage: fromStage } : l
       ));
-      setToast({ show: true, message: `❌ Error de red al mover a ${lead.name}` });
-      setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+      toast.error(`Error de red al mover a ${lead.name}`);
     }
   };
 
@@ -481,15 +478,13 @@ export function PipelineBoard() {
 
       if (!response.ok) throw new Error('Error al crear lead en el servidor');
 
-      setToast({ show: true, message: 'Lead creado exitosamente' });
-      setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+      toast.success('Lead creado exitosamente');
       
       // Refetch leads to see the newly added lead with its generated ID
       fetchLeads();
     } catch (error) {
       console.error(error);
-      setToast({ show: true, message: '❌ Error al crear lead' });
-      setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+      toast.error('Error al crear lead');
     }
   };
 
@@ -505,10 +500,7 @@ export function PipelineBoard() {
   };
 
   const exportToCSV = () => {
-    setToast({ show: true, message: 'Exportando pipeline a CSV...' });
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, show: false }));
-    }, 3000);
+    toast.success('Exportando pipeline a CSV...');
   };
 
   return (

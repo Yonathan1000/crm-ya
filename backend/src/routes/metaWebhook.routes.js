@@ -1,10 +1,13 @@
 import { Router } from 'express';
 import { verifyWebhook, handleIncomingMessage } from '../controllers/metaWebhook.controller.js';
+import { verifyMetaSignature } from '../middleware/verifyMetaSignature.js';
 
 const router = Router();
 
-// Rutas 100% públicas para que Meta (Facebook) pueda tocarlas
+// GET: Verificación inicial de Meta (handshake) — debe ser público
 router.get('/meta', verifyWebhook);
-router.post('/meta', handleIncomingMessage);
+
+// POST: Recepción de mensajes — protegido con verificación de firma HMAC-SHA256
+router.post('/meta', verifyMetaSignature, handleIncomingMessage);
 
 export default router;

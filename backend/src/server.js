@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth.routes.js';
 import clientRoutes from './routes/client.routes.js';
 import interactionRoutes from './routes/interaction.routes.js';
@@ -43,22 +44,58 @@ io.on('connection', (socket) => {
   });
 });
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true
+}));
+
+// ── Rate Limiting ──────────────────────────────────────────────────────────
+// Limita las peticiones por IP para prevenir ataques de fuerza bruta y DDoS
+
+// Rate Limiter estricto para login/registro (5 intentos por minuto)
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minuto
+  max: 10,
+  message: { error: 'Demasiados intentos. Espera 1 minuto.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate Limiter general para la API (100 peticiones por minuto por IP)
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  message: { error: 'Límite de peticiones excedido. Intenta de nuevo en un momento.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// ── Webhook: capturar rawBody ANTES de parsear JSON ────────────────────────
+// Meta firma el body crudo con HMAC-SHA256. Si Express parsea el JSON primero,
+// perdemos los bytes originales y no podemos verificar la firma.
+app.use('/api/webhooks', express.json({
+  verify: (req, _res, buf) => {
+    req.rawBody = buf;
+  }
+}));
+
+// JSON parser para el resto de rutas (sin captura de rawBody)
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
-app.use('/api/clients', clientRoutes);
-app.use('/api/interactions', interactionRoutes);
-app.use('/api/tasks', tasksRoutes);
-app.use('/api/automations', automationsRoutes);
-app.use('/api/conversations', conversationsRoutes);
-app.use('/api/templates', templatesRoutes);
-app.use('/api/superadmin', superadminRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/pipeline-stages', pipelineStagesRoutes);
-app.use('/api/integrations', integrationsRoutes);
-app.use('/api/webhooks', webhookRoutes);
+// ── Rutas ──────────────────────────────────────────────────────────────────
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/clients', apiLimiter, clientRoutes);
+app.use('/api/interactions', apiLimiter, interactionRoutes);
+app.use('/api/tasks', apiLimiter, tasksRoutes);
+app.use('/api/automations', apiLimiter, automationsRoutes);
+app.use('/api/conversations', apiLimiter, conversationsRoutes);
+app.use('/api/templates', apiLimiter, templatesRoutes);
+app.use('/api/superadmin', apiLimiter, superadminRoutes);
+app.use('/api/analytics', apiLimiter, analyticsRoutes);
+app.use('/api/users', apiLimiter, usersRoutes);
+app.use('/api/pipeline-stages', apiLimiter, pipelineStagesRoutes);
+app.use('/api/integrations', apiLimiter, integrationsRoutes);
+app.use('/api/webhooks', webhookRoutes); // Sin rate limiter — Meta envía muchos eventos
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

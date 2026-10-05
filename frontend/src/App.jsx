@@ -11,6 +11,7 @@ import Configuracion from './components/Configuracion';
 import Bandeja from './components/Bandeja';
 import Plantillas from './components/Plantillas';
 import SuperAdminPanel from './components/SuperAdminPanel';
+import { Toaster } from 'react-hot-toast';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('landing');
@@ -18,6 +19,16 @@ export default function App() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+  // Escuchar cuando cualquier llamada API detecta un token expirado
+  React.useEffect(() => {
+    const handleSessionExpired = () => {
+      setCurrentUser(null);
+      setCurrentView('landing');
+    };
+    window.addEventListener('session-expired', handleSessionExpired);
+    return () => window.removeEventListener('session-expired', handleSessionExpired);
+  }, []);
 
   React.useEffect(() => {
     const token = localStorage.getItem('token');
@@ -121,6 +132,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F4F5F7] font-sans text-gray-800">
+      <Toaster position="bottom-right" reverseOrder={false} toastOptions={{ style: { fontSize: '14px', borderRadius: '10px' } }} />
       <SidebarYA onNavChange={(id) => setActiveTab(id)} defaultActive="inicio" hasPremiumAccess={hasPremiumAccess} unreadCount={unreadBandeja} />
 
       <div className="flex-1 ml-[72px] flex flex-col h-screen overflow-hidden">
