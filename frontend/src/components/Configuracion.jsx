@@ -9,6 +9,44 @@ export default function Configuracion() {
   const [teamName, setTeamName] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSavingPass, setIsSavingPass] = useState(false);
+  const [billingCycle, setBillingCycle] = useState(1);
+  const [checkoutModal, setCheckoutModal] = useState({ isOpen: false, plan: '', amount: 0, cycle: 1 });
+  const [txHash, setTxHash] = useState('');
+  const [isSubmittingTx, setIsSubmittingTx] = useState(false);
+
+  const getPrice = (base) => {
+    if (billingCycle === 1) return base;
+    if (billingCycle === 3) return Math.round(base * 0.90);
+    if (billingCycle === 6) return Math.round(base * 0.85);
+    if (billingCycle === 9) return Math.round(base * 0.80);
+    return Math.round(base * 0.70);
+  };
+  
+  const handleSubmitHash = async () => {
+    if (!txHash) return toast.error('Debes ingresar el ID o Hash de transacción');
+    setIsSubmittingTx(true);
+    const tid = toast.loading('Registrando pago...');
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/billing/manual-order`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: checkoutModal.plan, amount: checkoutModal.amount, months: checkoutModal.cycle, txHash })
+      });
+      if (res.ok) {
+        toast.success('Pago registrado. Un administrador lo validará pronto.', { id: tid });
+        setCheckoutModal({ isOpen: false, plan: '', amount: 0, cycle: 1 });
+        setTxHash('');
+      } else {
+        const data = await res.json();
+        toast.error('Error: ' + (data.error || 'Desconocido'), { id: tid });
+      }
+    } catch(e) {
+      toast.error('Error de conexión al guardar el pago', { id: tid });
+    } finally {
+      setIsSubmittingTx(false);
+    }
+  };
   
   const handleCryptoPayment = async (plan, amount) => {
     const tid = toast.loading('Generando orden en Coinbase Commerce...');
@@ -406,78 +444,173 @@ export default function Configuracion() {
         );
       case 'facturacion':
         return (
-          <div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">Facturación y Planes (Cripto)</h3>
-            <div className="space-y-6">
+          <div className="pb-20">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6">Facturación y Planes (Suscripción Cripto)</h3>
+            
+            {/* Calculadora de la Landing Page */}
+            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-8">
+              <h4 className="text-lg font-bold text-gray-900 mb-4 text-center">Calculadora de Descuentos</h4>
+              <p className="text-sm text-gray-500 text-center mb-6">Selecciona cuántos meses deseas pagar por adelantado para obtener hasta un 30% de descuento automático.</p>
               
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                  <div>
-                    <h4 className="text-lg font-medium text-yellow-900">Actualizar Suscripción con Cripto</h4>
-                    <p className="text-sm text-yellow-700">Paga de forma segura, anónima y sin comisiones internacionales usando USDT a través de Coinbase Commerce.</p>
-                  </div>
-                  <img src="https://images.ctfassets.net/q5ulk4bp65r7/1rFQCjqefOHkDEK1O1I115/1d6a89c379fb0cf6b6908479e00cd527/Coinbase_Wordmark.svg" alt="Coinbase Commerce" className="h-8 object-contain" />
+              <div className="max-w-2xl mx-auto px-4 sm:px-12 relative mb-12">
+                <div className="absolute top-2.5 left-4 sm:left-12 right-4 sm:right-12 h-1 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-indigo-500 transition-all duration-300" style={{ width: `${((billingCycle === 1 ? 0 : billingCycle === 3 ? 1 : billingCycle === 6 ? 2 : billingCycle === 9 ? 3 : 4) / 4) * 100}%` }}></div>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Básico */}
-                <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col hover:border-yellow-400 transition-colors">
-                  <h4 className="text-xl font-bold text-gray-900">Plan Básico</h4>
-                  <div className="my-4">
-                    <span className="text-3xl font-black text-gray-900">20 USDT</span>
-                    <span className="text-gray-500 text-sm">/mes</span>
-                  </div>
-                  <ul className="text-sm text-gray-600 space-y-2 mb-6 flex-1">
-                    <li className="flex items-center">✅ Hasta 3 Usuarios</li>
-                    <li className="flex items-center">✅ 1,000 Contactos</li>
-                    <li className="flex items-center">✅ WhatsApp Básico</li>
-                  </ul>
-                  <button onClick={() => handleCryptoPayment('BASICO', 20)} className="w-full py-2.5 bg-[#FCD535] hover:bg-[#F0C820] text-[#1E2329] font-bold rounded-lg transition-colors">
-                    Pagar con Cripto
-                  </button>
-                </div>
-
-                {/* Pro */}
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-md flex flex-col relative transform scale-105 z-10">
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#FCD535] text-[#1E2329] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                    Más Popular
-                  </div>
-                  <h4 className="text-xl font-bold text-white">Plan Pro</h4>
-                  <div className="my-4">
-                    <span className="text-3xl font-black text-white">50 USDT</span>
-                    <span className="text-gray-400 text-sm">/mes</span>
-                  </div>
-                  <ul className="text-sm text-gray-300 space-y-2 mb-6 flex-1">
-                    <li className="flex items-center">✅ Hasta 15 Usuarios</li>
-                    <li className="flex items-center">✅ Contactos Ilimitados</li>
-                    <li className="flex items-center">✅ API Omnicanal Completa</li>
-                    <li className="flex items-center">✅ Automatizaciones</li>
-                  </ul>
-                  <button onClick={() => handleCryptoPayment('PRO', 50)} className="w-full py-2.5 bg-[#FCD535] hover:bg-[#F0C820] text-[#1E2329] font-bold rounded-lg transition-colors">
-                    Pagar con Cripto
-                  </button>
-                </div>
-
-                {/* Enterprise */}
-                <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col hover:border-yellow-400 transition-colors">
-                  <h4 className="text-xl font-bold text-gray-900">Enterprise</h4>
-                  <div className="my-4">
-                    <span className="text-3xl font-black text-gray-900">120 USDT</span>
-                    <span className="text-gray-500 text-sm">/mes</span>
-                  </div>
-                  <ul className="text-sm text-gray-600 space-y-2 mb-6 flex-1">
-                    <li className="flex items-center">✅ Usuarios Ilimitados</li>
-                    <li className="flex items-center">✅ Soporte Prioritario 24/7</li>
-                    <li className="flex items-center">✅ IA Generativa Privada</li>
-                    <li className="flex items-center">✅ Multi-Sucursal</li>
-                  </ul>
-                  <button onClick={() => handleCryptoPayment('ENTERPRISE', 120)} className="w-full py-2.5 bg-[#FCD535] hover:bg-[#F0C820] text-[#1E2329] font-bold rounded-lg transition-colors">
-                    Pagar con Cripto
-                  </button>
+                
+                <input 
+                  type="range" 
+                  min="0" max="4" step="1" 
+                  value={billingCycle === 1 ? 0 : billingCycle === 3 ? 1 : billingCycle === 6 ? 2 : billingCycle === 9 ? 3 : 4}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setBillingCycle(val === 0 ? 1 : val === 1 ? 3 : val === 2 ? 6 : val === 3 ? 9 : 12);
+                  }}
+                  className="w-full relative z-10 appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-600 [&::-webkit-slider-thumb]:shadow-md hover:[&::-webkit-slider-thumb]:scale-110 transition-all"
+                />
+                
+                <div className="flex justify-between mt-4 text-xs font-semibold text-gray-600">
+                  <span className={billingCycle === 1 ? "text-indigo-600 font-bold" : ""}>1 Mes<br/><span className="text-gray-400 font-normal">Precio Base</span></span>
+                  <span className={billingCycle === 3 ? "text-indigo-600 font-bold" : ""}>3 Meses<br/><span className="text-emerald-500 font-bold">-10%</span></span>
+                  <span className={billingCycle === 6 ? "text-indigo-600 font-bold" : ""}>6 Meses<br/><span className="text-emerald-500 font-bold">-15%</span></span>
+                  <span className={billingCycle === 9 ? "text-indigo-600 font-bold" : ""}>9 Meses<br/><span className="text-emerald-500 font-bold">-20%</span></span>
+                  <span className={billingCycle === 12 ? "text-indigo-600 font-bold" : ""}>12 Meses<br/><span className="text-emerald-500 font-bold">-30%</span></span>
                 </div>
               </div>
             </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Básico ($15) */}
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col hover:border-indigo-400 transition-colors">
+                <h4 className="text-xl font-bold text-gray-900">Plan Básico</h4>
+                <div className="my-4">
+                  <span className="text-3xl font-black text-gray-900">${getPrice(15)}</span>
+                  <span className="text-gray-500 text-sm">/mes</span>
+                </div>
+                <div className="text-sm font-semibold text-indigo-600 mb-6 h-5">
+                  {billingCycle > 1 ? `Cobro total: ${getPrice(15) * billingCycle}` : ''}
+                </div>
+                <ul className="text-sm text-gray-600 space-y-3 mb-6 flex-1">
+                  <li className="flex items-center">✅ Hasta 2 Vendedores</li>
+                  <li className="flex items-center">✅ 10 Plantillas rápidas</li>
+                  <li className="flex items-center">✅ Embudo Kanban Básico</li>
+                </ul>
+                <button 
+                  onClick={() => setCheckoutModal({ isOpen: true, plan: 'BÁSICO', amount: getPrice(15) * billingCycle, cycle: billingCycle })} 
+                  className="w-full py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg transition-colors border border-indigo-200"
+                >
+                  Adquirir Básico
+                </button>
+              </div>
+
+              {/* Pro ($25) */}
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-xl flex flex-col relative transform lg:scale-105 z-10">
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                  Más Popular
+                </div>
+                <h4 className="text-xl font-bold text-white">Plan Pro</h4>
+                <div className="my-4">
+                  <span className="text-3xl font-black text-white">${getPrice(25)}</span>
+                  <span className="text-gray-400 text-sm">/mes</span>
+                </div>
+                <div className="text-sm font-semibold text-indigo-400 mb-6 h-5">
+                  {billingCycle > 1 ? `Cobro total: ${getPrice(25) * billingCycle}` : ''}
+                </div>
+                <ul className="text-sm text-gray-300 space-y-3 mb-6 flex-1">
+                  <li className="flex items-center">✅ Hasta 5 Vendedores</li>
+                  <li className="flex items-center">✅ 50 Plantillas</li>
+                  <li className="flex items-center">✅ Embudos ilimitados</li>
+                  <li className="flex items-center">✅ API Multicanal</li>
+                </ul>
+                <button 
+                  onClick={() => setCheckoutModal({ isOpen: true, plan: 'PRO', amount: getPrice(25) * billingCycle, cycle: billingCycle })} 
+                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-colors"
+                >
+                  Adquirir Pro
+                </button>
+              </div>
+
+              {/* Enterprise ($40) */}
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col hover:border-indigo-400 transition-colors">
+                <h4 className="text-xl font-bold text-gray-900">Enterprise</h4>
+                <div className="my-4">
+                  <span className="text-3xl font-black text-gray-900">${getPrice(40)}</span>
+                  <span className="text-gray-500 text-sm">/mes</span>
+                </div>
+                <div className="text-sm font-semibold text-indigo-600 mb-6 h-5">
+                  {billingCycle > 1 ? `Cobro total: ${getPrice(40) * billingCycle}` : ''}
+                </div>
+                <ul className="text-sm text-gray-600 space-y-3 mb-6 flex-1">
+                  <li className="flex items-center">✅ Vendedores Ilimitados</li>
+                  <li className="flex items-center">✅ Plantillas Ilimitadas</li>
+                  <li className="flex items-center">✅ Soporte 24/7 Priority</li>
+                  <li className="flex items-center">✅ Asesor Asignado</li>
+                </ul>
+                <button 
+                  onClick={() => setCheckoutModal({ isOpen: true, plan: 'ENTERPRISE', amount: getPrice(40) * billingCycle, cycle: billingCycle })} 
+                  className="w-full py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg transition-colors border border-indigo-200"
+                >
+                  Adquirir Enterprise
+                </button>
+              </div>
+            </div>
+
+            {/* Modal de Checkout Manual */}
+            {checkoutModal.isOpen && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+                  <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h3 className="font-bold text-gray-900">Checkout Cripto Seguro</h3>
+                    <button onClick={() => setCheckoutModal({isOpen: false, plan: '', amount: 0, cycle: 1})} className="text-gray-400 hover:text-gray-600">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                  
+                  <div className="p-6">
+                    <div className="bg-indigo-50 rounded-xl p-4 mb-6 border border-indigo-100">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-indigo-800 font-medium">Plan {checkoutModal.plan}</span>
+                        <span className="text-indigo-800 font-bold">{checkoutModal.cycle} {checkoutModal.cycle === 1 ? 'Mes' : 'Meses'}</span>
+                      </div>
+                      <div className="flex justify-between items-end">
+                        <span className="text-sm text-indigo-600">Total a pagar:</span>
+                        <span className="text-2xl font-black text-indigo-700">{checkoutModal.amount} USDT</span>
+                      </div>
+                    </div>
+
+                    <div className="text-center mb-6">
+                      <p className="text-sm text-gray-600 mb-2">Envía exactamente <strong>{checkoutModal.amount} USDT</strong> a través de la red <strong>TRC-20 (Tron)</strong> a esta dirección:</p>
+                      
+                      <div className="bg-gray-100 p-3 rounded-lg border border-gray-200 flex items-center justify-between mb-4">
+                        <code className="text-xs font-mono text-gray-800 break-all">TXYZ_SU_DIRECCION_USDT_AQUI</code>
+                        <button onClick={() => {navigator.clipboard.writeText('TXYZ_SU_DIRECCION_USDT_AQUI'); toast.success('Copiado')}} className="ml-2 p-1.5 bg-white shadow-sm rounded text-gray-500 hover:text-indigo-600">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </button>
+                      </div>
+
+                      <div className="border-t border-gray-100 pt-4">
+                        <label className="block text-left text-sm font-medium text-gray-700 mb-1">ID de Transacción (Hash / TxID)</label>
+                        <input 
+                          type="text" 
+                          value={txHash}
+                          onChange={(e) => setTxHash(e.target.value)}
+                          placeholder="Ej. a1b2c3d4e5f6..." 
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                        <p className="text-left text-xs text-gray-500 mt-1">Una vez enviemos los fondos, pega el Hash aquí para que nuestro equipo lo valide.</p>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={handleSubmitHash}
+                      disabled={isSubmittingTx || !txHash}
+                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-lg transition-colors shadow-sm"
+                    >
+                      {isSubmittingTx ? 'Validando...' : 'Confirmar Pago'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       case 'embudos':

@@ -15,7 +15,7 @@ import pipelineStagesRoutes from './routes/pipelineStages.routes.js';
 import integrationsRoutes from './routes/integrations.routes.js';
 import webhookRoutes from './routes/metaWebhook.routes.js';
 import billingRoutes from './routes/billing.routes.js';
-import coinbaseWebhookRoutes from './routes/coinbaseWebhook.routes.js';
+
 
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -81,7 +81,7 @@ app.use('/api/webhooks', express.json({
   }
 }));
 
-app.use('/api/billing/webhook', coinbaseWebhookRoutes);
+
 
 // JSON parser para el resto de rutas (sin captura de rawBody)
 app.use(express.json());
