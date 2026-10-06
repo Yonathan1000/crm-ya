@@ -24,10 +24,10 @@ export default function Configuracion() {
         toast.success('Orden generada, redirigiendo...', { id: tid });
         window.location.href = data.checkoutUrl;
       } else {
-        toast.error('Error al generar la orden: ' + (data.error || 'Desconocido'), { id: tid });
+        toast.error('Error: ' + (data.details || data.error || 'Desconocido'), { id: tid });
       }
     } catch(e) {
-      toast.error('Fallo de conexión', { id: tid });
+      toast.error('Error interno: ' + e.message, { id: tid });
     }
   };
 

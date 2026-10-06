@@ -1,4 +1,5 @@
 ﻿import express from 'express';
+import axios from 'axios';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
 
@@ -7,11 +8,14 @@ const router = express.Router();
 
 const COINBASE_API_KEY = process.env.COINBASE_API_KEY || 'dummy_api_key';
 
-// Crear orden de pago en Coinbase Commerce
 router.post('/create-order', authMiddleware, async (req, res) => {
   try {
     const { plan, amount } = req.body;
     const companyId = req.user.companyId;
+
+    if (!COINBASE_API_KEY || COINBASE_API_KEY === 'dummy_api_key') {
+       return res.status(500).json({ error: 'La API Key de Coinbase no está configurada en Render.' });
+    }
 
     const payload = {
       name: `Plan ${plan} - CRM YA`,
@@ -29,19 +33,17 @@ router.post('/create-order', authMiddleware, async (req, res) => {
       cancel_url: `${process.env.FRONTEND_URL || 'https://crm-ya.vercel.app'}/app?billing=cancel`
     };
 
-    const response = await fetch('https://api.commerce.coinbase.com/charges', {
-      method: 'POST',
+    const response = await axios.post('https://api.commerce.coinbase.com/charges', payload, {
       headers: {
         'Content-Type': 'application/json',
         'X-CC-Api-Key': COINBASE_API_KEY,
         'X-CC-Version': '2018-03-22'
-      },
-      body: JSON.stringify(payload)
+      }
     });
 
-    const data = await response.json();
+    const data = response.data;
 
-    if (response.ok && data.data) {
+    if (data && data.data) {
       const chargeId = data.data.id;
       const checkoutUrl = data.data.hosted_url;
 
@@ -56,14 +58,14 @@ router.post('/create-order', authMiddleware, async (req, res) => {
         }
       });
       
-      res.json({ checkoutUrl });
+      return res.json({ checkoutUrl });
     } else {
-      console.error('Coinbase API Error:', data);
-      res.status(400).json({ error: 'Error de Coinbase', details: data.error?.message });
+      return res.status(400).json({ error: 'Respuesta inválida de Coinbase' });
     }
   } catch (error) {
-    console.error('Coinbase Order Error:', error);
-    res.status(500).json({ error: 'Fallo al procesar el pago' });
+    console.error('Coinbase Order Error:', error?.response?.data || error.message);
+    const details = error?.response?.data?.error?.message || error.message;
+    return res.status(500).json({ error: 'Fallo al procesar el pago', details });
   }
 });
 
