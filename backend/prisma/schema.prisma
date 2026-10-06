@@ -272,7 +272,7 @@ model PipelineStage {
 
 model Payment {
   id              String   @id @default(uuid())
-  binanceOrderId  String   @unique
+  providerOrderId  String   @unique
   companyId       String
   amount          Float
   currency        String   @default("USDT")

@@ -10,8 +10,8 @@ export default function Configuracion() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSavingPass, setIsSavingPass] = useState(false);
   
-  const handleBinancePayment = async (plan, amount) => {
-    const tid = toast.loading('Generando orden en Binance Pay...');
+  const handleCryptoPayment = async (plan, amount) => {
+    const tid = toast.loading('Generando orden en Coinbase Commerce...');
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/billing/create-order`, {
@@ -407,16 +407,16 @@ export default function Configuracion() {
       case 'facturacion':
         return (
           <div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">Facturación y Planes (Binance Pay)</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-6">Facturación y Planes (Cripto)</h3>
             <div className="space-y-6">
               
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                   <div>
                     <h4 className="text-lg font-medium text-yellow-900">Actualizar Suscripción con Cripto</h4>
-                    <p className="text-sm text-yellow-700">Paga de forma segura, anónima y sin comisiones internacionales usando USDT a través de Binance Pay.</p>
+                    <p className="text-sm text-yellow-700">Paga de forma segura, anónima y sin comisiones internacionales usando USDT a través de Coinbase Commerce.</p>
                   </div>
-                  <img src="https://public.bnbstatic.com/image/cms/article/body/202103/6da7e90cc46f41e57c6b4fc34ee07297.png" alt="Binance Pay" className="h-8 object-contain" />
+                  <img src="https://images.ctfassets.net/q5ulk4bp65r7/1rFQCjqefOHkDEK1O1I115/1d6a89c379fb0cf6b6908479e00cd527/Coinbase_Wordmark.svg" alt="Coinbase Commerce" className="h-8 object-contain" />
                 </div>
               </div>
 
@@ -433,8 +433,8 @@ export default function Configuracion() {
                     <li className="flex items-center">✅ 1,000 Contactos</li>
                     <li className="flex items-center">✅ WhatsApp Básico</li>
                   </ul>
-                  <button onClick={() => handleBinancePayment('BASICO', 20)} className="w-full py-2.5 bg-[#FCD535] hover:bg-[#F0C820] text-[#1E2329] font-bold rounded-lg transition-colors">
-                    Pagar con Binance
+                  <button onClick={() => handleCryptoPayment('BASICO', 20)} className="w-full py-2.5 bg-[#FCD535] hover:bg-[#F0C820] text-[#1E2329] font-bold rounded-lg transition-colors">
+                    Pagar con Cripto
                   </button>
                 </div>
 
@@ -454,8 +454,8 @@ export default function Configuracion() {
                     <li className="flex items-center">✅ API Omnicanal Completa</li>
                     <li className="flex items-center">✅ Automatizaciones</li>
                   </ul>
-                  <button onClick={() => handleBinancePayment('PRO', 50)} className="w-full py-2.5 bg-[#FCD535] hover:bg-[#F0C820] text-[#1E2329] font-bold rounded-lg transition-colors">
-                    Pagar con Binance
+                  <button onClick={() => handleCryptoPayment('PRO', 50)} className="w-full py-2.5 bg-[#FCD535] hover:bg-[#F0C820] text-[#1E2329] font-bold rounded-lg transition-colors">
+                    Pagar con Cripto
                   </button>
                 </div>
 
@@ -472,8 +472,8 @@ export default function Configuracion() {
                     <li className="flex items-center">✅ IA Generativa Privada</li>
                     <li className="flex items-center">✅ Multi-Sucursal</li>
                   </ul>
-                  <button onClick={() => handleBinancePayment('ENTERPRISE', 120)} className="w-full py-2.5 bg-[#FCD535] hover:bg-[#F0C820] text-[#1E2329] font-bold rounded-lg transition-colors">
-                    Pagar con Binance
+                  <button onClick={() => handleCryptoPayment('ENTERPRISE', 120)} className="w-full py-2.5 bg-[#FCD535] hover:bg-[#F0C820] text-[#1E2329] font-bold rounded-lg transition-colors">
+                    Pagar con Cripto
                   </button>
                 </div>
               </div>
