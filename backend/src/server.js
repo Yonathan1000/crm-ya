@@ -14,6 +14,8 @@ import usersRoutes from './routes/users.routes.js';
 import pipelineStagesRoutes from './routes/pipelineStages.routes.js';
 import integrationsRoutes from './routes/integrations.routes.js';
 import webhookRoutes from './routes/metaWebhook.routes.js';
+import billingRoutes from './routes/billing.routes.js';
+import binanceWebhookRoutes from './routes/binanceWebhook.routes.js';
 
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -79,6 +81,8 @@ app.use('/api/webhooks', express.json({
   }
 }));
 
+app.use('/api/billing/webhook', binanceWebhookRoutes);
+
 // JSON parser para el resto de rutas (sin captura de rawBody)
 app.use(express.json());
 
@@ -95,6 +99,7 @@ app.use('/api/analytics', apiLimiter, analyticsRoutes);
 app.use('/api/users', apiLimiter, usersRoutes);
 app.use('/api/pipeline-stages', apiLimiter, pipelineStagesRoutes);
 app.use('/api/integrations', apiLimiter, integrationsRoutes);
+app.use('/api/billing', apiLimiter, billingRoutes);
 app.use('/api/webhooks', webhookRoutes); // Sin rate limiter — Meta envía muchos eventos
 
 app.use((err, req, res, next) => {

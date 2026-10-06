@@ -10,6 +10,27 @@ export default function Configuracion() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSavingPass, setIsSavingPass] = useState(false);
   
+  const handleBinancePayment = async (plan, amount) => {
+    const tid = toast.loading('Generando orden en Binance Pay...');
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/billing/create-order`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan, amount })
+      });
+      const data = await res.json();
+      if (res.ok && data.checkoutUrl) {
+        toast.success('Orden generada, redirigiendo...', { id: tid });
+        window.location.href = data.checkoutUrl;
+      } else {
+        toast.error('Error al generar la orden: ' + (data.error || 'Desconocido'), { id: tid });
+      }
+    } catch(e) {
+      toast.error('Fallo de conexión', { id: tid });
+    }
+  };
+
   const handleUpdateProfile = async () => {
     setIsSavingProfile(true);
     try {
@@ -386,61 +407,74 @@ export default function Configuracion() {
       case 'facturacion':
         return (
           <div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">Facturación y Planes</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-6">Facturación y Planes (Binance Pay)</h3>
             <div className="space-y-6">
-              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                   <div>
-                    <h4 className="text-lg font-medium text-gray-900">Plan Actual: <span className="font-bold text-blue-600">Pro</span></h4>
-                    <p className="text-sm text-gray-500">Próximo cobro: 15 de Octubre, 2026</p>
+                    <h4 className="text-lg font-medium text-yellow-900">Actualizar Suscripción con Cripto</h4>
+                    <p className="text-sm text-yellow-700">Paga de forma segura, anónima y sin comisiones internacionales usando USDT a través de Binance Pay.</p>
                   </div>
-                  <button onClick={() => alert('Serás redirigido a Stripe para gestionar tu suscripción (Próximamente)')} className="py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cambiar Plan</button>
+                  <img src="https://public.bnbstatic.com/image/cms/article/body/202103/6da7e90cc46f41e57c6b4fc34ee07297.png" alt="Binance Pay" className="h-8 object-contain" />
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                <h4 className="text-lg font-medium text-gray-900 mb-4">Método de Pago</h4>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-gray-100 p-2 rounded">
-                      <span className="font-bold text-gray-700">VISA</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Visa terminada en 4242</p>
-                      <p className="text-xs text-gray-500">Expira 12/28</p>
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Básico */}
+                <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col hover:border-yellow-400 transition-colors">
+                  <h4 className="text-xl font-bold text-gray-900">Plan Básico</h4>
+                  <div className="my-4">
+                    <span className="text-3xl font-black text-gray-900">20 USDT</span>
+                    <span className="text-gray-500 text-sm">/mes</span>
                   </div>
-                  <button onClick={() => alert("Serás redirigido a Stripe para actualizar tu método de pago (Próximamente)")} className="text-blue-600 hover:text-blue-800 text-sm font-medium self-start sm:self-auto">Actualizar</button>
+                  <ul className="text-sm text-gray-600 space-y-2 mb-6 flex-1">
+                    <li className="flex items-center">✅ Hasta 3 Usuarios</li>
+                    <li className="flex items-center">✅ 1,000 Contactos</li>
+                    <li className="flex items-center">✅ WhatsApp Básico</li>
+                  </ul>
+                  <button onClick={() => handleBinancePayment('BASICO', 20)} className="w-full py-2.5 bg-[#FCD535] hover:bg-[#F0C820] text-[#1E2329] font-bold rounded-lg transition-colors">
+                    Pagar con Binance
+                  </button>
                 </div>
-              </div>
 
-              <div>
-                <h4 className="text-lg font-medium text-gray-900 mb-4">Historial de Facturas</h4>
-                <div className="border border-gray-200 rounded-lg overflow-x-auto shadow-sm">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      <tr>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">15 Sep, 2026</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$49.00</td>
-                        <td className="px-6 py-4 whitespace-nowrap"><span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Pagado</span></td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button onClick={() => alert('Iniciando descarga de PDF (Próximamente)')} className="text-blue-600 hover:text-blue-900">Descargar</button></td>
-                      </tr>
-                      <tr>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">15 Ago, 2026</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$49.00</td>
-                        <td className="px-6 py-4 whitespace-nowrap"><span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Pagado</span></td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button onClick={() => alert('Iniciando descarga de PDF (Próximamente)')} className="text-blue-600 hover:text-blue-900">Descargar</button></td>
-                      </tr>
-                    </tbody>
-                  </table>
+                {/* Pro */}
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-md flex flex-col relative transform scale-105 z-10">
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#FCD535] text-[#1E2329] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                    Más Popular
+                  </div>
+                  <h4 className="text-xl font-bold text-white">Plan Pro</h4>
+                  <div className="my-4">
+                    <span className="text-3xl font-black text-white">50 USDT</span>
+                    <span className="text-gray-400 text-sm">/mes</span>
+                  </div>
+                  <ul className="text-sm text-gray-300 space-y-2 mb-6 flex-1">
+                    <li className="flex items-center">✅ Hasta 15 Usuarios</li>
+                    <li className="flex items-center">✅ Contactos Ilimitados</li>
+                    <li className="flex items-center">✅ API Omnicanal Completa</li>
+                    <li className="flex items-center">✅ Automatizaciones</li>
+                  </ul>
+                  <button onClick={() => handleBinancePayment('PRO', 50)} className="w-full py-2.5 bg-[#FCD535] hover:bg-[#F0C820] text-[#1E2329] font-bold rounded-lg transition-colors">
+                    Pagar con Binance
+                  </button>
+                </div>
+
+                {/* Enterprise */}
+                <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col hover:border-yellow-400 transition-colors">
+                  <h4 className="text-xl font-bold text-gray-900">Enterprise</h4>
+                  <div className="my-4">
+                    <span className="text-3xl font-black text-gray-900">120 USDT</span>
+                    <span className="text-gray-500 text-sm">/mes</span>
+                  </div>
+                  <ul className="text-sm text-gray-600 space-y-2 mb-6 flex-1">
+                    <li className="flex items-center">✅ Usuarios Ilimitados</li>
+                    <li className="flex items-center">✅ Soporte Prioritario 24/7</li>
+                    <li className="flex items-center">✅ IA Generativa Privada</li>
+                    <li className="flex items-center">✅ Multi-Sucursal</li>
+                  </ul>
+                  <button onClick={() => handleBinancePayment('ENTERPRISE', 120)} className="w-full py-2.5 bg-[#FCD535] hover:bg-[#F0C820] text-[#1E2329] font-bold rounded-lg transition-colors">
+                    Pagar con Binance
+                  </button>
                 </div>
               </div>
             </div>
