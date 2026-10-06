@@ -125,9 +125,7 @@ export default function Automatizaciones() {
               <p className="text-sm text-indigo-100 font-medium">comunicación automatizada con clientes 24/7</p>
             </div>
           </div>
-          <button className="bg-white text-indigo-600 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-gray-50 transition transform hover:scale-105">
-            Probar
-          </button>
+          <button onClick={() => alert("Simulador de flujos próximamente")} className="bg-white text-indigo-600 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-gray-50 transition transform hover:scale-105">\n            Probar\n          </button>
         </div>
 
         {/* Grid */}
@@ -197,9 +195,7 @@ export default function Automatizaciones() {
                   </h3>
                   
                   <div className="mt-auto">
-                    <button className="w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-blue-600 text-sm font-bold rounded-xl border border-gray-200 transition-colors">
-                      Instalar
-                    </button>
+                    <button onClick={() => alert("Instalando plantilla...")} className="w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-blue-600 text-sm font-bold rounded-xl border border-gray-200 transition-colors">\n                      Instalar\n                    </button>
                   </div>
                 </div>
               </div>

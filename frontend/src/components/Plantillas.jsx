@@ -125,6 +125,7 @@ export default function Plantillas() {
             <div className="flex items-center gap-4">
               <button 
                 type="button" 
+                onClick={() => alert("Subida de archivos a S3 próximamente")}
                 className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm font-medium"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

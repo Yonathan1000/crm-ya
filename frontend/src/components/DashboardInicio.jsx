@@ -80,19 +80,19 @@ export default function DashboardInicio() {
           </div>
           
           <div className="flex flex-wrap items-center gap-3">
-            <button className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center">
+            <button onClick={() => setCurrentView('pipeline')} className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center">
               <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
               Nuevo Lead
             </button>
-            <button className="px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center">
+            <button onClick={() => setCurrentView('tareas')} className="px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center">
               <svg className="w-5 h-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
               </svg>
               Nueva Tarea
             </button>
-            <button className="px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center">
+            <button onClick={() => setCurrentView('configuracion')} className="px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center">
               <svg className="w-5 h-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
               </svg>
@@ -182,7 +182,7 @@ export default function DashboardInicio() {
               </div>
             </div>
             <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-              <button className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors w-full text-center">
+              <button onClick={() => setCurrentView('pipeline')} className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors w-full text-center">
                 Ver toda la actividad
               </button>
             </div>

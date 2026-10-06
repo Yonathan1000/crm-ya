@@ -360,7 +360,7 @@ export default function Configuracion() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Admin</td>
                     <td className="px-6 py-4 whitespace-nowrap"><span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Activo</span></td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button className="text-gray-400 hover:text-gray-500">Editar</button></td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button onClick={() => toast("Edición de miembros próximamente")} className="text-gray-400 hover:text-gray-500">Editar</button></td>
                   </tr>
                   <tr>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -376,7 +376,7 @@ export default function Configuracion() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Vendedor</td>
                     <td className="px-6 py-4 whitespace-nowrap"><span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Activo</span></td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button className="text-gray-400 hover:text-gray-500">Editar</button></td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button onClick={() => toast("Edición de miembros próximamente")} className="text-gray-400 hover:text-gray-500">Editar</button></td>
                   </tr>
                 </tbody>
               </table>
@@ -410,7 +410,7 @@ export default function Configuracion() {
                       <p className="text-xs text-gray-500">Expira 12/28</p>
                     </div>
                   </div>
-                  <button className="text-blue-600 hover:text-blue-800 text-sm font-medium self-start sm:self-auto">Actualizar</button>
+                  <button onClick={() => alert("Serás redirigido a Stripe para actualizar tu método de pago (Próximamente)")} className="text-blue-600 hover:text-blue-800 text-sm font-medium self-start sm:self-auto">Actualizar</button>
                 </div>
               </div>
 
