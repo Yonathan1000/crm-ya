@@ -233,7 +233,7 @@ export default function App() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-hidden p-4">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4">
           {activeTab === 'inicio' && <DashboardInicio />}
           {activeTab === 'bandeja' && <Bandeja />}
           {activeTab === 'pipeline' && <PipelineBoard />}

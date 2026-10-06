@@ -504,7 +504,7 @@ export function PipelineBoard() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent relative">
+    <div className="min-h-full bg-transparent relative">
       {/* ── Barra superior y Action Bar ── */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

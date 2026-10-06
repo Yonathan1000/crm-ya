@@ -676,7 +676,7 @@ export default function Configuracion() {
   };
 
   return (
-    <div className="py-8 px-4 bg-gray-50 min-h-screen">
+    <div className="py-8 px-4 bg-gray-50 min-h-full">
       <div className="mb-6 max-w-6xl mx-auto">
         <h2 className="text-2xl font-bold text-gray-900">Configuración</h2>
         <p className="text-sm text-gray-500 mt-1">Administra tu perfil, seguridad, preferencias, equipo, facturación y canales.</p>
