@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
-import { MessageSquareDashed, Loader2, SearchX } from 'lucide-react';
+import { MessageSquareDashed, Loader2, SearchX, Paperclip, FileText } from 'lucide-react';
 
 export default function Bandeja() {
   const [conversations, setConversations] = useState([]);
@@ -77,7 +77,8 @@ export default function Bandeja() {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/conversations`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      const data = await res.json();
+      const responseData = await res.json();
+      const data = responseData.data || [];
       setConversations(data);
       if (data.length > 0) {
         setActiveConv((prev) => {
@@ -399,7 +400,28 @@ export default function Bandeja() {
                         ? (msg.status === 'FAILED' ? 'bg-red-500 text-white rounded-br-none' : 'bg-indigo-600 text-white rounded-br-none') 
                         : 'bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-100'
                     }`}>
-                      <p className="text-sm">{msg.content}</p>
+                      {msg.mediaUrl ? (
+                        <div className="mb-1">
+                          {msg.mediaType === 'image' && (
+                            <img src={msg.mediaUrl} alt="" className="rounded-lg max-w-full max-h-60 object-cover mb-1" />
+                          )}
+                          {msg.mediaType === 'audio' && (
+                            <audio controls src={msg.mediaUrl} className="max-w-full" />
+                          )}
+                          {msg.mediaType === 'video' && (
+                            <video controls src={msg.mediaUrl} className="rounded-lg max-w-full max-h-60 mb-1" />
+                          )}
+                          {msg.mediaType === 'document' && (
+                            <a href={msg.mediaUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 bg-black/5 rounded-lg hover:bg-black/10 transition-colors">
+                              <FileText className="w-5 h-5" />
+                              <span className="text-sm font-medium">Documento adjunto</span>
+                            </a>
+                          )}
+                          {msg.content && <p className="text-sm mt-1">{msg.content}</p>}
+                        </div>
+                      ) : (
+                        <p className="text-sm">{msg.content}</p>
+                      )}
                       <p className={`text-[10px] mt-1 text-right ${isOutbound ? (msg.status === 'FAILED' ? 'text-red-100' : 'text-indigo-100') : 'text-gray-400'}`}>
                         {msg.status === 'FAILED' ? '?? Error al enviar (Meta)' : formatTime(msg.timestamp || msg.created_at)}
                       </p>
@@ -431,6 +453,9 @@ export default function Bandeja() {
                 </div>
               )}
               <div className="flex items-center gap-2">
+                <button type="button" onClick={() => toast('Próximamente: envío de archivos')} className="p-2 text-gray-400 hover:text-indigo-600 transition-colors">
+                  <Paperclip className="w-5 h-5" />
+                </button>
                 <input 
                   type="text" 
                   value={message}

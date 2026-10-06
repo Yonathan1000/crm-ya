@@ -1,36 +1,15 @@
-const fs = require('fs');
-let code = fs.readFileSync('d:/Documentos/YA/frontend/src/App.jsx', 'utf8');
-code = code.replace(
-  "const unreadNotifications = 3;",
-  const unreadNotifications = 3;
-  const [unreadBandeja, setUnreadBandeja] = useState(0);
+﻿const fs = require('fs');
+const file = 'frontend/src/App.jsx';
+let content = fs.readFileSync(file, 'utf8');
 
-  React.useEffect(() => {
-    if (currentView !== 'app') return;
-    const fetchUnread = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        const res = await fetch(\\/api/conversations\, {
-          headers: { 'Authorization': \Bearer \\ }
-        });
-        if (res.ok) {
-          const convs = await res.json();
+// Fix unread count pagination change
+content = content.replace(
+  /const convs = await res\.json\(\);\s*let count = 0;\s*convs\.forEach\(/g,
+  `const convsData = await res.json();
+          const convs = convsData.data || convsData;
           let count = 0;
-          convs.forEach(c => {
-            const lastMsg = c.messages && c.messages.length > 0 ? c.messages[c.messages.length - 1] : null;
-            if (lastMsg && lastMsg.direction === 'INBOUND') {
-              count++;
-            }
-          });
-          setUnreadBandeja(count);
-        }
-      } catch(e) {}
-    };
-    fetchUnread();
-    const interval = setInterval(fetchUnread, 5000);
-    return () => clearInterval(interval);
-  }, [currentView]);
+          convs.forEach(`
 );
-code = code.replace('<SidebarYA onNavChange={(id) => setActiveTab(id)} defaultActive="inicio" hasPremiumAccess={hasPremiumAccess} />', '<SidebarYA onNavChange={(id) => setActiveTab(id)} defaultActive="inicio" hasPremiumAccess={hasPremiumAccess} unreadCount={unreadBandeja} />');
-fs.writeFileSync('d:/Documentos/YA/frontend/src/App.jsx', code);
+
+fs.writeFileSync(file, content);
+console.log('App.jsx adaptada a paginación');

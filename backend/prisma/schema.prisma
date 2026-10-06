@@ -163,6 +163,8 @@ model Conversation {
   id          String @id @default(uuid())
   status      String @default("OPEN") // OPEN, CLOSED
   unreadCount Int    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 
   clientId String
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
@@ -181,7 +183,12 @@ model Message {
   id        String   @id @default(uuid())
   content   String
   direction String // INBOUND, OUTBOUND
+  status    String   @default("SENT") // SENT, DELIVERED, READ, FAILED
   timestamp DateTime @default(now())
+
+  // Multimedia support
+  mediaUrl  String?  // URL del archivo (Meta CDN o almacenamiento propio)
+  mediaType String?  // image, audio, video, document
 
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)

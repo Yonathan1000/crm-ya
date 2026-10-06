@@ -10,23 +10,44 @@ router.use(authMiddleware);
 // GET / - Return all conversations
 router.get('/', async (req, res) => {
   try {
-    const conversations = await prisma.conversation.findMany({
-      where: {
-        client: {
-          companyId: req.user.companyId
-        }
-      },
-      include: {
-        client: true,
-        channel: true,
-        messages: {
-          orderBy: {
-            timestamp: 'asc',
-          }
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
+
+    const where = {
+      client: {
+        companyId: req.user.companyId
+      }
+    };
+
+    const [conversations, total] = await Promise.all([
+      prisma.conversation.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: {
+          updatedAt: 'desc'
         },
-      },
+        include: {
+          client: true,
+          channel: true,
+          messages: {
+            orderBy: {
+              timestamp: 'desc',
+            },
+            take: 1
+          },
+        },
+      }),
+      prisma.conversation.count({ where })
+    ]);
+    
+    res.json({
+      data: conversations,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
     });
-    res.json(conversations);
   } catch (error) {
     console.error('Error fetching conversations:', error);
     res.status(500).json({ error: 'Failed to fetch conversations' });

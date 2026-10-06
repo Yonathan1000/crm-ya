@@ -112,9 +112,20 @@ export const handleIncomingMessage = async (req, res) => {
               await prisma.conversation.update({ where: { id: conversation.id }, data: { unreadCount: { increment: 1 } } });
 
               // d) Guardar el mensaje en Prisma
+              let mediaUrl = null;
+              let mediaType = null;
+              
+              if (event.message.attachments && event.message.attachments.length > 0) {
+                const attachment = event.message.attachments[0];
+                mediaUrl = attachment.payload?.url;
+                mediaType = attachment.type;
+              }
+
               const savedMessage = await prisma.message.create({
                 data: {
                   content: text || '[Contenido multimedia]',
+                  mediaUrl,
+                  mediaType,
                   direction: 'INBOUND',
                   conversationId: conversation.id
                 }
@@ -138,9 +149,26 @@ export const handleIncomingMessage = async (req, res) => {
             if (change.value && change.value.messages) {
                for (const msg of change.value.messages) {
                  const senderExternalId = msg.from; // Número de teléfono del cliente
-                 const text = msg.text?.body;
-                 
-                 if (!text) continue; // Solo procesamos texto por ahora
+                 let text = msg.text?.body;
+                 let mediaUrl = null;
+                 let mediaType = null;
+
+                 if (['image', 'audio', 'video', 'document'].includes(msg.type)) {
+                   mediaType = msg.type;
+                   const mediaId = msg[msg.type].id;
+                   try {
+                     const { default: axios } = await import('axios');
+                     const mediaRes = await axios.get(`https://graph.facebook.com/v18.0/${mediaId}`, {
+                       headers: { Authorization: `Bearer ${channel.credentials}` }
+                     });
+                     mediaUrl = mediaRes.data.url;
+                     text = msg[msg.type]?.caption || '[Multimedia]';
+                   } catch (err) {
+                     console.error('Error fetching media URL:', err.message);
+                   }
+                 }
+
+                 if (!text && !mediaUrl) continue;
 
                  let client = await prisma.client.findUnique({
                    where: { externalId: senderExternalId }
@@ -171,6 +199,8 @@ export const handleIncomingMessage = async (req, res) => {
                 const savedMessage = await prisma.message.create({
                    data: {
                      content: text,
+                     mediaUrl,
+                     mediaType,
                      direction: 'INBOUND',
                      conversationId: conversation.id
                    }

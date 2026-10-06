@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
+import { checkRole } from '../middleware/checkRole.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -108,6 +109,65 @@ router.get('/team', async (req, res) => {
     res.json(team);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch team' });
+  }
+});
+
+// POST /team - Create a new team member
+router.post('/team', checkRole('COMPANY_ADMIN'), async (req, res) => {
+  try {
+    const { nombre, email, password } = req.body;
+    
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User with this email already exists' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+    
+    const newUser = await prisma.user.create({
+      data: {
+        nombre,
+        email,
+        passwordHash,
+        role: 'SALES_REP',
+        companyId: req.user.companyId,
+        isApproved: true
+      },
+      select: {
+        id: true,
+        nombre: true,
+        email: true,
+        role: true
+      }
+    });
+    
+    res.status(201).json(newUser);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create team member' });
+  }
+});
+
+// DELETE /team/:id - Remove a team member
+router.delete('/team/:id', checkRole('COMPANY_ADMIN'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const userToDelete = await prisma.user.findUnique({
+      where: { id }
+    });
+    
+    if (!userToDelete || userToDelete.companyId !== req.user.companyId) {
+      return res.status(404).json({ error: 'User not found or access denied' });
+    }
+    
+    await prisma.user.delete({
+      where: { id }
+    });
+    
+    res.json({ message: 'Team member removed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to remove team member' });
   }
 });
 

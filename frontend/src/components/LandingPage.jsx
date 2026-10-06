@@ -43,7 +43,7 @@ export default function LandingPage({ onLoginSuccess }) {
       }
 
       localStorage.setItem('token', data.token);
-      onLoginSuccess(data.user.isSuperAdmin ? 'superadmin' : 'admin');
+      onLoginSuccess(data.user.isSuperAdmin ? 'superadmin' : 'admin', isRegisterTab);
     } catch (err) {
       setErrorMsg(err.message);
     } finally {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import SidebarYA from './components/SidebarYA';
 import PipelineBoard from './components/PipelineBoard';
 import LandingPage from './components/LandingPage';
+import OnboardingWizard from './components/OnboardingWizard';
 import DashboardInicio from './components/DashboardInicio';
 import Contactos from './components/Contactos';
 import Tareas from './components/Tareas';
@@ -69,6 +70,7 @@ export default function App() {
 
   const unreadNotifications = 3;
   const [unreadBandeja, setUnreadBandeja] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   React.useEffect(() => {
     if (currentView !== "app") return;
@@ -80,7 +82,8 @@ export default function App() {
           headers: { "Authorization": `Bearer ${token}` }
         });
         if (res.ok) {
-          const convs = await res.json();
+          const convsData = await res.json();
+          const convs = convsData.data || convsData;
           let count = 0;
           convs.forEach(c => {
             count += c.unreadCount || 0;

@@ -2,10 +2,27 @@ import prisma from '../config/db.js';
 
 export const getAll = async (req, res) => {
   try {
-    const clients = await prisma.client.findMany({
-      where: { companyId: req.user.companyId }
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
+    
+    const where = { companyId: req.user.companyId };
+    
+    const [clients, total] = await Promise.all([
+      prisma.client.findMany({
+        where,
+        skip,
+        take: limit
+      }),
+      prisma.client.count({ where })
+    ]);
+    
+    res.json({
+      data: clients,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
     });
-    res.json(clients);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch clients' });
   }
