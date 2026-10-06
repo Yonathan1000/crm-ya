@@ -1,8 +1,66 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import PipelineStagesManager from './PipelineStagesManager';
 
 export default function Configuracion() {
   const [activeTab, setActiveTab] = useState('perfil');
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [teamEmail, setTeamEmail] = useState('');
+  const [teamName, setTeamName] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isSavingPass, setIsSavingPass] = useState(false);
+  
+  const handleUpdateProfile = async () => {
+    setIsSavingProfile(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/profile`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: userProfile.name, email: userProfile.email })
+      });
+      if(res.ok) { toast.success('Perfil actualizado correctamente'); }
+      else { toast.error('Error al actualizar perfil'); }
+    } catch(e) { toast.error('Error de conexión'); }
+    finally { setIsSavingProfile(false); }
+  };
+
+  const handleUpdatePassword = async () => {
+    if(passwordData.newPassword !== passwordData.confirmPassword) return toast.error('Las contraseñas no coinciden');
+    setIsSavingPass(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/password`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(passwordData)
+      });
+      if(res.ok) { 
+        toast.success('Contraseña actualizada'); 
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      }
+      else { const d = await res.json(); toast.error(d.error || 'Error al actualizar contraseña'); }
+    } catch(e) { toast.error('Error de conexión'); }
+    finally { setIsSavingPass(false); }
+  };
+
+  const handleInviteUser = async () => {
+    if(!teamEmail || !teamName) return toast.error('Llene los campos');
+    const tid = toast.loading('Invitando...');
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/users/team`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: teamEmail, nombre: teamName, password: 'temporal1234' })
+      });
+      if(res.ok) { 
+        toast.success('Usuario invitado. Contraseña temporal: temporal1234', { id: tid }); 
+        setTeamEmail(''); setTeamName('');
+      } else { const d = await res.json(); toast.error(d.error || 'Error', { id: tid }); }
+    } catch(e) { toast.error('Error de conexión', { id: tid }); }
+  };
+
   const [userProfile, setUserProfile] = useState({ name: '', email: '' });
 
   // Canales states
@@ -123,16 +181,16 @@ export default function Configuracion() {
                 <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                 </div>
-                <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Subir nueva foto</button>
+                <button onClick={() => toast('Soporte para S3 próximamente')} className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Subir nueva foto</button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
-                  <input type="text" value={userProfile.name} readOnly className="w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-500 bg-gray-50 cursor-not-allowed" />
+                  <input type="text" value={userProfile.name} onChange={e => setUserProfile({...userProfile, name: e.target.value})} className="w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-500 bg-gray-50 " />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
-                  <input type="email" value={userProfile.email} readOnly className="w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-500 bg-gray-50 cursor-not-allowed" />
+                  <input type="email" value={userProfile.email} onChange={e => setUserProfile({...userProfile, email: e.target.value})} className="w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-500 bg-gray-50 " />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
@@ -140,7 +198,7 @@ export default function Configuracion() {
                 </div>
               </div>
               <div className="pt-4 flex justify-end">
-                <button className="py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">Guardar cambios</button>
+                <button onClick={handleUpdateProfile} disabled={isSavingProfile} className="py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50">{isSavingProfile ? 'Guardando...' : 'Guardar cambios'}</button>
               </div>
             </div>
           </div>
@@ -154,18 +212,18 @@ export default function Configuracion() {
                 <h4 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">Cambiar Contraseña</h4>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña actual</label>
-                  <input type="password" className="w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 bg-white" />
+                  <input type="password" value={passwordData.currentPassword} onChange={e => setPasswordData({...passwordData, currentPassword: e.target.value})} className="w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 bg-white" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nueva contraseña</label>
-                  <input type="password" className="w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 bg-white" />
+                  <input type="password" value={passwordData.newPassword} onChange={e => setPasswordData({...passwordData, newPassword: e.target.value})} className="w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 bg-white" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar contraseña</label>
-                  <input type="password" className="w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 bg-white" />
+                  <input type="password" value={passwordData.confirmPassword} onChange={e => setPasswordData({...passwordData, confirmPassword: e.target.value})} className="w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 bg-white" />
                 </div>
                 <div className="pt-2 flex justify-end">
-                  <button className="py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">Actualizar contraseña</button>
+                  <button onClick={handleUpdatePassword} disabled={isSavingPass} className="py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50">{isSavingPass ? 'Actualizando...' : 'Actualizar contraseña'}</button>
                 </div>
               </div>
 
@@ -267,11 +325,15 @@ export default function Configuracion() {
         return (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">Equipo y Miembros</h3>
-              <button className="py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                Invitar Usuario
-              </button>
-            </div>
+      <h3 className="text-xl font-semibold text-gray-900">Equipo y Miembros</h3>
+      <div className="flex gap-2">
+        <input type="text" placeholder="Nombre" value={teamName} onChange={e=>setTeamName(e.target.value)} className="border rounded px-2 text-sm" />
+        <input type="email" placeholder="Correo" value={teamEmail} onChange={e=>setTeamEmail(e.target.value)} className="border rounded px-2 text-sm" />
+        <button onClick={handleInviteUser} className="py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+          Invitar Usuario
+        </button>
+      </div>
+    </div>
             
             <div className="border border-gray-200 rounded-lg overflow-x-auto shadow-sm">
               <table className="min-w-full divide-y divide-gray-200">
@@ -332,7 +394,7 @@ export default function Configuracion() {
                     <h4 className="text-lg font-medium text-gray-900">Plan Actual: <span className="font-bold text-blue-600">Pro</span></h4>
                     <p className="text-sm text-gray-500">Próximo cobro: 15 de Octubre, 2026</p>
                   </div>
-                  <button className="py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cambiar Plan</button>
+                  <button onClick={() => alert('Serás redirigido a Stripe para gestionar tu suscripción (Próximamente)')} className="py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cambiar Plan</button>
                 </div>
               </div>
 
@@ -369,13 +431,13 @@ export default function Configuracion() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">15 Sep, 2026</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$49.00</td>
                         <td className="px-6 py-4 whitespace-nowrap"><span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Pagado</span></td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button className="text-blue-600 hover:text-blue-900">Descargar</button></td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button onClick={() => alert('Iniciando descarga de PDF (Próximamente)')} className="text-blue-600 hover:text-blue-900">Descargar</button></td>
                       </tr>
                       <tr>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">15 Ago, 2026</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$49.00</td>
                         <td className="px-6 py-4 whitespace-nowrap"><span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Pagado</span></td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button className="text-blue-600 hover:text-blue-900">Descargar</button></td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button onClick={() => alert('Iniciando descarga de PDF (Próximamente)')} className="text-blue-600 hover:text-blue-900">Descargar</button></td>
                       </tr>
                     </tbody>
                   </table>

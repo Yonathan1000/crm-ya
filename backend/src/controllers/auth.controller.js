@@ -141,3 +141,36 @@ export const me = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch user', details: error.message });
   }
 };
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { nombre, email } = req.body;
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { nombre, email }
+    });
+    res.json({ message: 'Perfil actualizado', user });
+  } catch(error) {
+    res.status(500).json({ error: 'Error actualizando perfil' });
+  }
+};
+
+export const updatePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    
+    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isMatch) return res.status(401).json({ error: 'Contraseña actual incorrecta' });
+
+    const password_hash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { password_hash }
+    });
+
+    res.json({ message: 'Contraseña actualizada correctamente' });
+  } catch(error) {
+    res.status(500).json({ error: 'Error actualizando contraseña' });
+  }
+};
