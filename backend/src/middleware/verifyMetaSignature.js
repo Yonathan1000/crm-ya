@@ -21,8 +21,7 @@ export function verifyMetaSignature(req, res, next) {
 
   if (!signature) {
     console.warn('[SECURITY] Webhook recibido SIN firma X-Hub-Signature-256. Rechazado.');
-    // return res.status(401).json({ error: 'Missing signature' });
-    next();
+    return res.status(401).json({ error: 'Missing signature' });
   }
 
   // El rawBody fue capturado por nuestro middleware especial en server.js
@@ -47,8 +46,7 @@ export function verifyMetaSignature(req, res, next) {
 
   if (!isValid) {
     console.warn('[SECURITY] ⛔ Firma inválida en webhook. Posible ataque. IP:', req.ip);
-    // return res.status(401).json({ error: 'Invalid signature' });
-    next();
+    return res.status(401).json({ error: 'Invalid signature' });
   }
 
   // ✅ Firma válida — este mensaje realmente viene de Meta
