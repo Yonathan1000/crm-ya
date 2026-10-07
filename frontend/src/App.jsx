@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import SidebarYA from './components/SidebarYA';
 import PipelineBoard from './components/PipelineBoard';
 import LandingPage from './components/LandingPage';
+import { PrivacyPolicy, TermsOfService } from './components/LegalPages';
 import OnboardingWizard from './components/OnboardingWizard';
 import DashboardInicio from './components/DashboardInicio';
 import Contactos from './components/Contactos';
