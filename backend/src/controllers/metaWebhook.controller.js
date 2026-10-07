@@ -20,9 +20,20 @@ export const verifyWebhook = (req, res) => {
 };
 
 // Recepción de mensajes en tiempo real (Facebook, IG y WhatsApp)
+
+
 export const handleIncomingMessage = async (req, res) => {
   try {
     const body = req.body;
+    global.webhookLogs = global.webhookLogs || [];
+    global.webhookLogs.unshift({ time: new Date(), body });
+    if (global.webhookLogs.length > 20) global.webhookLogs.pop();
+    
+    console.log('====== INCOMING WEBHOOK ======');
+
+    console.log(JSON.stringify(body, null, 2));
+    console.log('==============================');
+
 
     if (body.object === 'page' || body.object === 'instagram' || body.object === 'whatsapp_business_account') {
       

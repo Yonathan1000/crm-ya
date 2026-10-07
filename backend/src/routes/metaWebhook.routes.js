@@ -10,4 +10,9 @@ router.get('/meta', verifyWebhook);
 // POST: Recepción de mensajes — protegido con verificación de firma HMAC-SHA256
 router.post('/meta', verifyMetaSignature, handleIncomingMessage);
 
+
+router.get('/logs', (req, res) => {
+  res.json(global.webhookLogs || []);
+});
 export default router;
+
