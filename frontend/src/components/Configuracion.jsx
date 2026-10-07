@@ -9,6 +9,10 @@ export default function Configuracion() {
   const [teamName, setTeamName] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSavingPass, setIsSavingPass] = useState(false);
+  const [waPhoneNumberId, setWaPhoneNumberId] = useState('');
+  const [waToken, setWaToken] = useState('');
+  const [waWabaId, setWaWabaId] = useState('');
+  const [isSavingWa, setIsSavingWa] = useState(false);
   const [billingCycle, setBillingCycle] = useState(1);
   const [checkoutModal, setCheckoutModal] = useState({ isOpen: false, plan: '', amount: 0, cycle: 1 });
   const [txHash, setTxHash] = useState('');
@@ -188,6 +192,32 @@ export default function Configuracion() {
     window.location.href = '/';
   };
 
+  
+  const handleSaveWhatsapp = async () => {
+    if (!waPhoneNumberId || !waToken) return toast.error('Debes ingresar el Identificador y el Token');
+    setIsSavingWa(true);
+    const tid = toast.loading('Conectando WhatsApp...');
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/integrations/whatsapp/manual`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumberId: waPhoneNumberId, wabaId: waWabaId, token: waToken })
+      });
+      if (res.ok) {
+        toast.success('WhatsApp conectado correctamente', { id: tid });
+        setWaStatus('Conectado');
+        setIsWaModalOpen(false);
+      } else {
+        toast.error('Error al guardar credenciales', { id: tid });
+      }
+    } catch(e) {
+      toast.error('Error de red', { id: tid });
+    } finally {
+      setIsSavingWa(false);
+    }
+  };
+  
   const handleMetaAuth = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -787,7 +817,7 @@ export default function Configuracion() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number ID</label>
-                <input type="text" className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm text-gray-900 bg-white" placeholder="103948..." />
+                <input type="text" className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm text-gray-900 bg-white" placeholder="103948..." value={waWabaId} onChange={(e) => setWaWabaId(e.target.value)} />
               </div>
               
               <hr className="my-4 border-gray-200" />
@@ -804,7 +834,7 @@ export default function Configuracion() {
 
             <div className="mt-6 flex justify-end space-x-3">
               <button onClick={() => setIsWaModalOpen(false)} className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">Cancelar</button>
-              <button onClick={() => { setWaStatus('Conectado'); setIsWaModalOpen(false); }} className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">Guardar Credenciales</button>
+              <button onClick={handleSaveWhatsapp} disabled={isSavingWa} className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">{isSavingWa ? 'Guardando...' : 'Guardar Credenciales'}</button>
             </div>
           </div>
         </div>

@@ -203,3 +203,56 @@ export const handleFacebookCallback = async (req, res) => {
     res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/app?error=meta_failed`);
   }
 };
+
+
+// Guardar WhatsApp Cloud API de forma manual
+export const saveManualWhatsapp = async (req, res) => {
+  try {
+    const { companyId } = req.user;
+    const { phoneNumberId, wabaId, token } = req.body;
+
+    if (!phoneNumberId || !token) {
+      return res.status(400).json({ error: 'Faltan credenciales' });
+    }
+
+    const integration = await prisma.integration.upsert({
+      where: { id: 'wa_' + companyId },
+      create: {
+        id: 'wa_' + companyId,
+        companyId,
+        provider: 'WHATSAPP_MANUAL',
+        accessToken: token,
+        externalId: wabaId || phoneNumberId,
+        status: 'ACTIVE'
+      },
+      update: {
+        accessToken: token,
+        externalId: wabaId || phoneNumberId,
+        status: 'ACTIVE'
+      }
+    });
+
+    await prisma.channel.upsert({
+      where: { id: 'channel_wa_' + phoneNumberId },
+      create: {
+        id: 'channel_wa_' + phoneNumberId,
+        platform: 'WHATSAPP',
+        externalId: phoneNumberId,
+        name: `WhatsApp (${phoneNumberId.substring(0, 5)}...)`,
+        credentials: token,
+        companyId,
+        integrationId: integration.id,
+        status: 'ACTIVE'
+      },
+      update: {
+        credentials: token,
+        status: 'ACTIVE'
+      }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error saving manual WA:', error);
+    res.status(500).json({ error: 'Internal error' });
+  }
+};
