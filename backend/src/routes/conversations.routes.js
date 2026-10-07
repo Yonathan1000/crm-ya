@@ -33,9 +33,8 @@ router.get('/', async (req, res) => {
           channel: true,
           messages: {
             orderBy: {
-              timestamp: 'desc',
-            },
-            take: 1
+              timestamp: 'asc', // Mostrar todos en orden cronologico
+            }
           },
         },
       }),
@@ -51,6 +50,27 @@ router.get('/', async (req, res) => {
   } catch (error) {
     console.error('Error fetching conversations:', error);
     res.status(500).json({ error: 'Failed to fetch conversations' });
+  }
+});
+
+
+// GET /:id/messages - Obtener todos los mensajes de una conversacion
+router.get('/:id/messages', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const conversation = await prisma.conversation.findFirst({
+      where: { id, client: { companyId: req.user.companyId } },
+      include: {
+        messages: {
+          orderBy: { timestamp: 'asc' }
+        }
+      }
+    });
+    
+    if (!conversation) return res.status(404).json({ error: 'Not found' });
+    res.json(conversation.messages);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch messages' });
   }
 });
 
