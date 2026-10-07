@@ -577,7 +577,19 @@ export default function Configuracion() {
                       </div>
                     </div>
 
+                    
+                    <div className="flex flex-col items-center mb-4">
+                      <div className="p-2 bg-white rounded-xl border border-gray-200 shadow-sm mb-2">
+                        <img 
+                          src={"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TWzHjwo4oGr43PgUo22PCsABz5bifbnbCw"} 
+                          alt="QR Code USDT" 
+                          className="w-32 h-32 object-contain"
+                        />
+                      </div>
+                      <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded-md">Escanea desde Binance o TrustWallet</span>
+                    </div>
                     <div className="text-center mb-6">
+
                       <p className="text-sm text-gray-600 mb-2">Envía exactamente <strong>{checkoutModal.amount} USDT</strong> a través de la red <strong>TRC-20 (Tron)</strong> a esta dirección:</p>
                       
                       <div className="bg-gray-100 p-3 rounded-lg border border-gray-200 flex items-center justify-between mb-4">
