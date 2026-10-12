@@ -1,7 +1,7 @@
 {
-  "name": "crm-kommo-backend",
+  "name": "crm-ya-backend",
   "version": "1.0.0",
-  "description": "Backend API for Kommo CRM Clone",
+  "description": "Backend API for YA CRM",
   "type": "module",
   "scripts": {
     "start": "node src/server.js",

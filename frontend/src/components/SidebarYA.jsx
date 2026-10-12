@@ -171,20 +171,18 @@ export function SidebarYA({ defaultActive = 'inicio', onNavChange, hasPremiumAcc
       `}
     >
       <div>
-        <div className="flex items-center justify-center h-14 border-b border-gray-200">
-          <div
+        <div className="flex items-center justify-center h-14 border-b border-gray-200 px-3">
+          <img
+            src="/logo_ya.png"
+            alt="YA CRM"
             className={`
-              flex items-center justify-center rounded-lg bg-blue-600 text-white font-bold
-              transition-all duration-200 shadow-sm
-              ${expanded ? 'w-9 h-9 text-lg' : 'w-8 h-8 text-base'}
+              rounded-xl object-contain shadow-sm transition-all duration-200
+              ${expanded ? 'w-9 h-9' : 'w-8 h-8'}
             `}
-            aria-label="YA CRM"
-          >
-            K
-          </div>
+          />
           {expanded && (
-            <span className="ml-2 text-sm font-semibold text-gray-800 whitespace-nowrap">
-              YA
+            <span className="ml-2.5 text-base font-extrabold tracking-tight text-[#004b6a] whitespace-nowrap">
+              YA <span className="text-[#009fe3]">CRM</span>
             </span>
           )}
         </div>

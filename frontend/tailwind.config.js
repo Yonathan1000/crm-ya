@@ -10,14 +10,40 @@ export default {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
-        // Kommo-inspired color system
-        kommo: {
+        // Paleta oficial YA extraída de Adobe Illustrator (LOGO YA.ai)
+        ya: {
+          50: '#f0f9fd',
+          100: '#e0f3fb',
+          200: '#b9e5f7',
+          300: '#7ccdf1',
+          400: '#38b5ea',
+          500: '#009fe3', // Azul vibrante del Logo YA
+          600: '#008cc8', // Tono medio
+          700: '#0074a6',
+          800: '#005980',
+          900: '#004b6a', // Azul marino profundo del Logo YA
+          950: '#002f43',
           bg: '#F4F5F7',
           sidebar: '#FFFFFF',
           card: '#FFFFFF',
           border: '#E5E7EB',
-          primary: '#4C8BF5',
-          'primary-hover': '#3B7AE4',
+          primary: '#009fe3',
+          'primary-hover': '#008cc8',
+          dark: '#004b6a',
+        },
+        // Ajuste de escala blue para unificar todos los componentes a la identidad YA
+        blue: {
+          50: '#f0f9fd',
+          100: '#e0f3fb',
+          200: '#b9e5f7',
+          300: '#7ccdf1',
+          400: '#38b5ea',
+          500: '#009fe3', // #009fe3 oficial
+          600: '#008cc8',
+          700: '#0074a6',
+          800: '#005980',
+          900: '#004b6a', // #004b6a oficial
+          950: '#002f43',
         },
         pipeline: {
           'new-bg': '#DBEAFE',
