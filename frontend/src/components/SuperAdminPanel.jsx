@@ -229,14 +229,15 @@ export default function SuperAdminPanel({ onExit }) {
     <div className="min-h-screen bg-[#050505] text-gray-300 font-sans flex">
       {/* Sidebar */}
       <aside className="w-64 bg-[#0A0A0A] border-r border-white/5 flex flex-col z-10">
-        <div className="h-20 flex items-center px-8 border-b border-white/5">
-          <span className="text-white font-bold tracking-widest uppercase text-sm">Nivel Dios</span>
+        <div className="h-20 flex items-center gap-3 px-6 border-b border-white/5">
+          <img src="/logo_ya.png" alt="YA CRM" className="w-8 h-8 object-contain rounded-lg shadow-sm" />
+          <span className="text-white font-extrabold tracking-wide uppercase text-sm">YA <span className="text-[#009fe3]">CRM</span></span>
         </div>
         <nav className="flex-1 px-4 py-8 space-y-2">
-          <button onClick={() => setActiveTab('inquilinos')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeTab === 'inquilinos' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}>Inquilinos (Tenants)</button>
-          <button onClick={() => setActiveTab('metricas')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeTab === 'metricas' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}>Métricas Globales</button>
-          <button onClick={() => setActiveTab('facturacion')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeTab === 'facturacion' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}>Facturación y Logs</button>
-          <button onClick={() => setActiveTab('ajustes')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeTab === 'ajustes' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}>Ajustes del Sistema</button>
+          <button onClick={() => setActiveTab('inquilinos')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeTab === 'inquilinos' ? 'bg-[#009fe3]/15 text-[#009fe3] border border-[#009fe3]/30' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}>Inquilinos (Tenants)</button>
+          <button onClick={() => setActiveTab('metricas')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeTab === 'metricas' ? 'bg-[#009fe3]/15 text-[#009fe3] border border-[#009fe3]/30' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}>Métricas Globales</button>
+          <button onClick={() => setActiveTab('facturacion')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeTab === 'facturacion' ? 'bg-[#009fe3]/15 text-[#009fe3] border border-[#009fe3]/30' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}>Facturación y Logs</button>
+          <button onClick={() => setActiveTab('ajustes')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeTab === 'ajustes' ? 'bg-[#009fe3]/15 text-[#009fe3] border border-[#009fe3]/30' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}>Ajustes del Sistema</button>
         </nav>
         <div className="p-4 border-t border-white/5">
           <button onClick={handleLogout} className="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-all">

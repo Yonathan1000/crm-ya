@@ -51,21 +51,32 @@ const OnboardingWizard = ({ onComplete }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl flex flex-col max-h-[90vh] border border-gray-100 overflow-hidden">
         
+        {/* Header with YA CRM Logo */}
+        <div className="pt-5 px-8 flex items-center justify-between border-b border-gray-100 pb-4 bg-gray-50/50">
+          <div className="flex items-center gap-2.5">
+            <img src="/logo_ya.png" alt="YA CRM" className="w-8 h-8 object-contain rounded-lg shadow-sm" />
+            <span className="font-extrabold text-lg text-[#004b6a]">YA <span className="text-[#009fe3]">CRM</span></span>
+          </div>
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+            Paso {step} de 3
+          </span>
+        </div>
+
         {/* Progress indicator */}
-        <div className="px-8 py-6 border-b border-gray-100 flex justify-center">
+        <div className="px-8 py-5 border-b border-gray-100 flex justify-center bg-white">
           <div className="flex items-center space-x-4">
-            <div className={`flex h-10 w-10 items-center justify-center rounded-full ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
+            <div className={`flex h-10 w-10 items-center justify-center rounded-full transition-all ${step >= 1 ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30' : 'bg-gray-100 text-gray-400'}`}>
               <Building2 className="w-5 h-5" />
             </div>
-            <div className={`h-1 w-16 ${step >= 2 ? 'bg-blue-600' : 'bg-gray-100'}`}></div>
-            <div className={`flex h-10 w-10 items-center justify-center rounded-full ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
+            <div className={`h-1 w-16 transition-all ${step >= 2 ? 'bg-blue-600' : 'bg-gray-100'}`}></div>
+            <div className={`flex h-10 w-10 items-center justify-center rounded-full transition-all ${step >= 2 ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30' : 'bg-gray-100 text-gray-400'}`}>
               <Plug className="w-5 h-5" />
             </div>
-            <div className={`h-1 w-16 ${step >= 3 ? 'bg-blue-600' : 'bg-gray-100'}`}></div>
-            <div className={`flex h-10 w-10 items-center justify-center rounded-full ${step >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
+            <div className={`h-1 w-16 transition-all ${step >= 3 ? 'bg-blue-600' : 'bg-gray-100'}`}></div>
+            <div className={`flex h-10 w-10 items-center justify-center rounded-full transition-all ${step >= 3 ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30' : 'bg-gray-100 text-gray-400'}`}>
               <Users className="w-5 h-5" />
             </div>
           </div>
