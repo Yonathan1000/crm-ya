@@ -105,7 +105,45 @@ export const handleFacebookCallback = async (req, res) => {
     // 4.5. Buscar las Páginas de Facebook del usuario y guardarlas como Canales
     try {
       const pagesResponse = await axios.get(`https://graph.facebook.com/v18.0/me/accounts?access_token=${longLivedToken}`);
-      const pages = pagesResponse.data.data;
+      let pages = pagesResponse.data?.data || [];
+
+      // Si /me/accounts viene vacío (común en Facebook Login for Business con granular scopes),
+      // inspeccionamos el token con debug_token para extraer los IDs de páginas autorizadas directamente
+      if (pages.length === 0) {
+        try {
+          const debugRes = await axios.get('https://graph.facebook.com/debug_token', {
+            params: {
+              input_token: longLivedToken,
+              access_token: longLivedToken
+            }
+          });
+          const granularScopes = debugRes.data?.data?.granular_scopes || [];
+          const pageTargetIds = new Set();
+          granularScopes.forEach(s => {
+            if (['pages_show_list', 'pages_messaging', 'pages_read_engagement', 'pages_manage_metadata'].includes(s.scope)) {
+              (s.target_ids || []).forEach(tid => pageTargetIds.add(tid));
+            }
+          });
+
+          for (const targetPageId of pageTargetIds) {
+            try {
+              const directPageRes = await axios.get(`https://graph.facebook.com/v18.0/${targetPageId}`, {
+                params: {
+                  fields: 'id,name,access_token,instagram_business_account',
+                  access_token: longLivedToken
+                }
+              });
+              if (directPageRes.data?.access_token) {
+                pages.push(directPageRes.data);
+              }
+            } catch (dpErr) {
+              console.warn(`No se pudo obtener datos directos de página ${targetPageId}:`, dpErr.message);
+            }
+          }
+        } catch (dbgErr) {
+          console.warn('Error inspeccionando granular scopes en debug_token:', dbgErr.message);
+        }
+      }
       
       for (const page of pages) {
         await prisma.channel.upsert({

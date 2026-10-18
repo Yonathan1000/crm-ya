@@ -119,8 +119,8 @@ export const handleIncomingMessage = async (req, res) => {
                 });
               }
 
-              // Incrementar contador de no leídos
-              await prisma.conversation.update({ where: { id: conversation.id }, data: { unreadCount: { increment: 1 } } });
+              // Incrementar contador de no leídos y actualizar fecha
+              await prisma.conversation.update({ where: { id: conversation.id }, data: { unreadCount: { increment: 1 }, updatedAt: new Date() } });
 
               // d) Guardar el mensaje en Prisma
               let mediaUrl = null;
@@ -206,7 +206,7 @@ export const handleIncomingMessage = async (req, res) => {
                    });
                  }
 
-                 await prisma.conversation.update({ where: { id: conversation.id }, data: { unreadCount: { increment: 1 } } });
+                 await prisma.conversation.update({ where: { id: conversation.id }, data: { unreadCount: { increment: 1 }, updatedAt: new Date() } });
                 const savedMessage = await prisma.message.create({
                    data: {
                      content: text,

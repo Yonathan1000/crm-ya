@@ -135,8 +135,17 @@ export default function Bandeja() {
           // Actualizar conversacion existente
           return prevConvs.map(c => {
             if (c.id === data.conversationId) {
-              const updatedMessages = [...(c.messages || []), data.message];
-              const updatedConv = { ...c, messages: updatedMessages };
+              const existingMsgs = c.messages || [];
+              // Evitar duplicar si ya existe el mensaje por ID
+              if (existingMsgs.some(m => m.id === data.message.id)) {
+                return c;
+              }
+              const updatedMessages = [...existingMsgs, data.message];
+              const updatedConv = {
+                ...c,
+                messages: updatedMessages,
+                updatedAt: data.message.timestamp || new Date().toISOString()
+              };
               
               // Actualizar ventana activa si estamos parados ahí
               setActiveConv(prevActive => {
@@ -151,8 +160,8 @@ export default function Bandeja() {
             return c;
           });
         } else {
-          // Si es nueva conversación, agregarla (podríamos recargar todo o construir el objeto)
-          fetchConversations(); // Recargar todo es más fácil para capturar los Joins
+          // Si es nueva conversación, recargar lista
+          fetchConversations();
           return prevConvs;
         }
       });
@@ -188,48 +197,88 @@ export default function Bandeja() {
     if (!message.trim() || !activeConv) return;
     
     const contentToSend = message;
+    const targetConvId = activeConv.id;
     setMessage('');
     setShowTemplatePopover(false);
 
+    const tempId = 'temp_' + Date.now();
     const optimisticMessage = {
-      id: Date.now(),
+      id: tempId,
       content: contentToSend,
       direction: 'OUTBOUND',
+      status: 'SENDING',
+      timestamp: new Date().toISOString(),
       created_at: new Date().toISOString()
     };
 
-    const updatedActive = {
-      ...activeConv,
-      messages: [...(activeConv.messages || []), optimisticMessage]
-    };
+    // Agregar mensaje optimista a la conversación activa
+    setActiveConv(prev => {
+      if (!prev || prev.id !== targetConvId) return prev;
+      return {
+        ...prev,
+        messages: [...(prev.messages || []), optimisticMessage]
+      };
+    });
 
-    setActiveConv(updatedActive);
-    setConversations(prev => prev.map(c => c.id === activeConv.id ? updatedActive : c));
+    setConversations(prev => prev.map(c => {
+      if (c.id === targetConvId) {
+        return {
+          ...c,
+          messages: [...(c.messages || []), optimisticMessage],
+          updatedAt: new Date().toISOString()
+        };
+      }
+      return c;
+    }));
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/conversations/${activeConv.id}/messages`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/conversations/${targetConvId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ content: contentToSend, direction: 'OUTBOUND' })
       });
       
       if (!res.ok) {
-        throw new Error('Error de Meta');
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Error al enviar el mensaje');
       }
+
+      const savedMessage = await res.json();
       
-      // Si todo sale bien, lo dejamos como estaba y recargamos para tener el ID real de la base de datos
-      fetchConversations();
+      // Reemplazar mensaje temporal con el guardado en base de datos
+      setActiveConv(prev => {
+        if (!prev || prev.id !== targetConvId) return prev;
+        const updatedMsgs = (prev.messages || []).map(m => m.id === tempId ? savedMessage : m);
+        return { ...prev, messages: updatedMsgs };
+      });
+
+      setConversations(prev => prev.map(c => {
+        if (c.id === targetConvId) {
+          const updatedMsgs = (c.messages || []).map(m => m.id === tempId ? savedMessage : m);
+          return { ...c, messages: updatedMsgs, updatedAt: savedMessage.timestamp || new Date().toISOString() };
+        }
+        return c;
+      }));
+
     } catch (err) {
       console.error("Error sending message:", err);
-      // Marcar el mensaje como FAILED en el UI
-      const failedMessage = { ...optimisticMessage, status: 'FAILED' };
-      const failedActive = {
-        ...activeConv,
-        messages: activeConv.messages ? activeConv.messages.map(m => m.id === optimisticMessage.id ? failedMessage : m) : [failedMessage]
-      };
-      setActiveConv(failedActive);
-      setConversations(prev => prev.map(c => c.id === activeConv.id ? failedActive : c));
+      toast.error(err.message || 'Error al enviar el mensaje', { duration: 5000 });
+
+      // Marcar mensaje como FAILED pero mantenerlo en pantalla
+      setActiveConv(prev => {
+        if (!prev || prev.id !== targetConvId) return prev;
+        const failedMsgs = (prev.messages || []).map(m => m.id === tempId ? { ...m, status: 'FAILED' } : m);
+        return { ...prev, messages: failedMsgs };
+      });
+
+      setConversations(prev => prev.map(c => {
+        if (c.id === targetConvId) {
+          const failedMsgs = (c.messages || []).map(m => m.id === tempId ? { ...m, status: 'FAILED' } : m);
+          return { ...c, messages: failedMsgs };
+        }
+        return c;
+      }));
     }
   };
 
@@ -397,7 +446,11 @@ export default function Bandeja() {
                   <div key={msg.id} className={`flex ${isOutbound ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[70%] rounded-2xl px-4 py-2 ${
                       isOutbound 
-                        ? (msg.status === 'FAILED' ? 'bg-red-500 text-white rounded-br-none' : 'bg-indigo-600 text-white rounded-br-none') 
+                        ? (msg.status === 'FAILED' 
+                            ? 'bg-red-500 text-white rounded-br-none shadow-sm' 
+                            : msg.status === 'SENDING'
+                              ? 'bg-indigo-400 text-white rounded-br-none opacity-85'
+                              : 'bg-indigo-600 text-white rounded-br-none') 
                         : 'bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-100'
                     }`}>
                       {msg.mediaUrl ? (
@@ -422,8 +475,12 @@ export default function Bandeja() {
                       ) : (
                         <p className="text-sm">{msg.content}</p>
                       )}
-                      <p className={`text-[10px] mt-1 text-right ${isOutbound ? (msg.status === 'FAILED' ? 'text-red-100' : 'text-indigo-100') : 'text-gray-400'}`}>
-                        {msg.status === 'FAILED' ? '?? Error al enviar (Meta)' : formatTime(msg.timestamp || msg.created_at)}
+                      <p className={`text-[10px] mt-1 text-right ${isOutbound ? (msg.status === 'FAILED' ? 'text-red-100 font-medium' : 'text-indigo-100') : 'text-gray-400'}`}>
+                        {msg.status === 'SENDING' 
+                          ? 'Enviando...' 
+                          : msg.status === 'FAILED' 
+                            ? '⚠️ No entregado' 
+                            : formatTime(msg.timestamp || msg.created_at)}
                       </p>
                     </div>
                   </div>
