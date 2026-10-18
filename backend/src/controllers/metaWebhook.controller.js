@@ -41,16 +41,26 @@ export const handleIncomingMessage = async (req, res) => {
       for (const entry of body.entry) {
         
         // El ID de la página, cuenta de IG o número de WABA al que le escribieron
-        let externalId = entry.id; if (entry.changes && entry.changes[0]?.value?.metadata?.phone_number_id) { externalId = entry.changes[0].value.metadata.phone_number_id; } 
+        let externalId = entry.id;
+        if (entry.changes && entry.changes[0]?.value?.metadata?.phone_number_id) {
+          externalId = entry.changes[0].value.metadata.phone_number_id;
+        } 
         
         // 1. ¿A qué inquilino (Company) le pertenece esta página/número?
         const channel = await prisma.channel.findFirst({
-          where: { externalId, status: 'ACTIVE' },
-          include: { company: true }
+          where: {
+            OR: [
+              { externalId: externalId },
+              { externalId: entry.id }
+            ],
+            status: 'ACTIVE'
+          },
+          include: { company: true },
+          orderBy: { id: 'desc' }
         });
 
         if (!channel) {
-          console.warn(`Mensaje recibido para un ID desconocido (${externalId}). Ignorando...`);
+          console.warn(`Mensaje recibido para un ID desconocido (${externalId} / ${entry.id}). Ignorando...`);
           continue;
         }
 

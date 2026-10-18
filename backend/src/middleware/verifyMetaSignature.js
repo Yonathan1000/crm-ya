@@ -38,14 +38,19 @@ export function verifyMetaSignature(req, res, next) {
     .update(rawBody)
     .digest('hex');
 
+  const sigBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expectedSignature);
+
+  if (sigBuffer.length !== expectedBuffer.length) {
+    console.warn('[SECURITY] ⛔ Longitud de firma inválida en webhook. Recibido:', signature?.length, 'Esperado:', expectedBuffer.length);
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+
   // Comparación de tiempo constante para prevenir ataques de timing
-  const isValid = crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  );
+  const isValid = crypto.timingSafeEqual(sigBuffer, expectedBuffer);
 
   if (!isValid) {
-    console.warn('[SECURITY] ⛔ Firma inválida en webhook. Posible ataque. IP:', req.ip);
+    console.warn('[SECURITY] ⛔ Firma inválida en webhook. Posible discordancia de META_APP_SECRET. IP:', req.ip);
     return res.status(401).json({ error: 'Invalid signature' });
   }
 
