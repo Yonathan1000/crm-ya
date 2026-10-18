@@ -244,19 +244,11 @@ export default function Configuracion() {
   };
 
   const handleFbAction = () => {
-    if (fbStatus === 'Conectado') {
-      setFbStatus('Desconectado');
-    } else {
-      handleMetaAuth();
-    }
+    handleMetaAuth();
   };
 
   const handleIgAction = () => {
-    if (igStatus === 'Conectado') {
-      setIgStatus('Desconectado');
-    } else {
-      handleMetaAuth();
-    }
+    handleMetaAuth();
   };
 
   const renderTabContent = () => {
@@ -660,7 +652,20 @@ export default function Configuracion() {
         case 'canales':
         return (
           <div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">Canales de Comunicación (Omnicanal)</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-[#004b6a]">Canales de Comunicación (Omnicanal)</h3>
+                <p className="text-sm text-gray-500 mt-0.5">Gestiona tus conexiones con WhatsApp, Facebook e Instagram.</p>
+              </div>
+              <button 
+                onClick={handleMetaAuth} 
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#004b6a] to-[#009fe3] text-white font-bold text-sm shadow-md shadow-blue-500/20 hover:opacity-95 transition-all transform hover:-translate-y-0.5"
+              >
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                Reconectar con Nueva App de Meta
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* WhatsApp Card */}
               <div className="bg-white shadow-sm border border-gray-200 rounded-xl p-6 flex flex-col items-center text-center">
@@ -689,8 +694,8 @@ export default function Configuracion() {
                 <span className={`px-3 py-1 text-xs font-medium rounded-full mb-4 ${fbStatus === 'Conectado' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
                   {fbStatus}
                 </span>
-                <button onClick={handleFbAction} className="mt-auto w-full py-2 px-4 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition">
-                  {fbStatus === 'Conectado' ? 'Desvincular' : 'Iniciar sesión en Facebook'}
+                <button onClick={handleFbAction} className="mt-auto w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+                  {fbStatus === 'Conectado' ? 'Reconectar con Facebook' : 'Iniciar sesión en Facebook'}
                 </button>
               </div>
 
@@ -705,8 +710,8 @@ export default function Configuracion() {
                 <span className={`px-3 py-1 text-xs font-medium rounded-full mb-4 ${igStatus === 'Conectado' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
                   {igStatus}
                 </span>
-                <button onClick={handleIgAction} className="mt-auto w-full py-2 px-4 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition">
-                  {igStatus === 'Conectado' ? 'Desvincular' : 'Iniciar sesión en Instagram'}
+                <button onClick={handleIgAction} className="mt-auto w-full py-2 px-4 bg-pink-600 hover:bg-pink-700 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+                  {igStatus === 'Conectado' ? 'Reconectar con Instagram' : 'Iniciar sesión en Instagram'}
                 </button>
               </div>
             </div>
