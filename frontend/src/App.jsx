@@ -16,7 +16,16 @@ import SuperAdminPanel from './components/SuperAdminPanel';
 import { Toaster } from 'react-hot-toast';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('landing');
+  const getInitialView = () => {
+    if (typeof window !== 'undefined') {
+      const search = new URLSearchParams(window.location.search);
+      const path = window.location.pathname.toLowerCase();
+      if (path.includes('privacy') || search.get('view') === 'privacy') return 'privacy';
+      if (path.includes('terms') || search.get('view') === 'terms') return 'terms';
+    }
+    return 'landing';
+  };
+  const [currentView, setCurrentView] = useState(getInitialView());
   const [activeTab, setActiveTab] = useState('inicio');
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -98,12 +107,20 @@ export default function App() {
     return () => clearInterval(interval);
   }, [currentView]);
 
+  if (currentView === 'privacy') {
+    return <PrivacyPolicy onBack={() => { window.history.pushState({}, '', '/'); setCurrentView('landing'); }} />;
+  }
+
+  if (currentView === 'terms') {
+    return <TermsOfService onBack={() => { window.history.pushState({}, '', '/'); setCurrentView('landing'); }} />;
+  }
+
   if (isCheckingSession) {
     return <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F5F7] text-gray-500 font-medium">Reconectando con la matriz...</div>;
   }
 
   if (currentView === 'landing') {
-    return <LandingPage onLoginSuccess={(role) => {
+    return <LandingPage onNavigate={(view) => setCurrentView(view)} onLoginSuccess={(role) => {
       if (role === 'superadmin') {
         setCurrentView('superadmin');
       } else {
