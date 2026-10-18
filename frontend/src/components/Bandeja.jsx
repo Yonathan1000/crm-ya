@@ -336,6 +336,17 @@ export default function Bandeja() {
     }
   };
 
+  const isWindowActive = (conv) => {
+    if (!conv?.messages || conv.messages.length === 0) return true; // Si es nuevo o no hay mensajes, permitir
+    const inbounds = conv.messages.filter(m => m.direction === 'INBOUND');
+    if (inbounds.length === 0) return false;
+    const lastInbound = inbounds[inbounds.length - 1];
+    const msgTime = new Date(lastInbound.timestamp || lastInbound.created_at).getTime();
+    if (isNaN(msgTime)) return true;
+    const diffHours = (Date.now() - msgTime) / (1000 * 60 * 60);
+    return diffHours < 24;
+  };
+
   const messagesEndRef = React.useRef(null);
 
   useEffect(() => {
@@ -429,13 +440,32 @@ export default function Bandeja() {
           </div>
         ) : activeConv ? (
           <>
-            <div className="shrink-0 p-4 bg-white border-b border-gray-200 flex items-center shadow-sm z-10">
-              <div className="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold mr-3">
-                {(activeConv.client?.nombre || '?').charAt(0).toUpperCase()}
+            <div className="shrink-0 p-4 bg-white border-b border-gray-200 flex items-center justify-between shadow-sm z-10">
+              <div className="flex items-center">
+                <div className="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold mr-3">
+                  {(activeConv.client?.nombre || '?').charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h2 className="font-bold text-gray-800">{activeConv.client?.nombre || 'Cliente'}</h2>
+                  <p className="text-xs text-gray-500 capitalize flex items-center gap-1.5">
+                    {renderIcon(activeConv.channel?.platform)}
+                    {activeConv.channel?.platform || 'Desconocido'}
+                  </p>
+                </div>
               </div>
+
               <div>
-                <h2 className="font-bold text-gray-800">{activeConv.client?.nombre || 'Cliente'}</h2>
-                <p className="text-xs text-gray-500 capitalize">{activeConv.channel?.platform || 'Desconocido'}</p>
+                {isWindowActive(activeConv) ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs" title="El cliente ha escrito en las últimas 24h. Puedes responder libremente.">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Ventana 24h activa
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 shadow-xs" title="Meta no permite enviar mensajes a clientes inactivos tras 24 horas. El cliente debe volver a escribir para responderle.">
+                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                    Ventana 24h cerrada
+                  </span>
+                )}
               </div>
             </div>
             
@@ -475,13 +505,16 @@ export default function Bandeja() {
                       ) : (
                         <p className="text-sm">{msg.content}</p>
                       )}
-                      <p className={`text-[10px] mt-1 text-right ${isOutbound ? (msg.status === 'FAILED' ? 'text-red-100 font-medium' : 'text-indigo-100') : 'text-gray-400'}`}>
-                        {msg.status === 'SENDING' 
-                          ? 'Enviando...' 
-                          : msg.status === 'FAILED' 
-                            ? '⚠️ No entregado' 
-                            : formatTime(msg.timestamp || msg.created_at)}
-                      </p>
+                      <div className={`text-[10px] mt-1 text-right flex items-center justify-end gap-1 ${isOutbound ? (msg.status === 'FAILED' ? 'text-red-100 font-medium' : 'text-indigo-100') : 'text-gray-400'}`}>
+                        {msg.status === 'SENDING' && <span>Enviando...</span>}
+                        {msg.status === 'FAILED' && <span>⚠️ No entregado</span>}
+                        {msg.status !== 'SENDING' && msg.status !== 'FAILED' && (
+                          <>
+                            <span>{formatTime(msg.timestamp || msg.created_at)}</span>
+                            {isOutbound && <span className="font-bold text-white text-[11px] leading-none" title="Entregado a Meta">✓✓</span>}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
